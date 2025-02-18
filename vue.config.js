@@ -9,5 +9,12 @@ module.exports = {
   https: {
     key: fs.readFileSync('/usr/local/nginx/key.pem'),
     cert: fs.readFileSync('/usr/local/nginx/cert.pem'),
-  } 
+},
+  proxy: {
+    '/wt': {
+      target: 'http://101.33.233.214:5656/',
+      ws: true,
+      changeOrigin: true
+    }
+  }
 };
