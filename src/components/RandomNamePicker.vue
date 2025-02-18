@@ -15,12 +15,33 @@
       <!-- 底部名字列表 -->
       <div class="bottom-content">
         <div class="name-grid">
-          <div v-for="name in names" 
-               :key="name" 
+          <div v-for="(name, index) in names" 
+               :key="index" 
                class="name-item"
                :class="{ 'active': name === currentName }">
-            {{ name }}
+            <div class="name-content">{{ name }}</div>
+            <div class="name-actions">
+              <button class="edit-btn" @click="editName(index)">✎</button>
+              <button class="delete-btn" @click="deleteName(index)">×</button>
+            </div>
           </div>
+          <div class="name-item add-item" @click="addNewName">
+            <div class="add-content">+</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 编辑弹窗 -->
+    <div v-if="showEditDialog" class="edit-dialog">
+      <div class="edit-content">
+        <input type="text" 
+               v-model="editingName" 
+               @keyup.enter="saveName"
+               ref="editInput">
+        <div class="edit-buttons">
+          <button @click="saveName" class="save-btn">保存</button>
+          <button @click="cancelEdit" class="cancel-btn">取消</button>
         </div>
       </div>
     </div>
@@ -32,15 +53,15 @@ export default {
   data() {
     return {
       names: [
-        '张三', '张三02', '张三03', '张三04', '张三05', '张三06', '张三07', '张三08',
-        '张三09', '张三10', '张三11', '张三12', '张三13', '张三14', '张三15', '张三16',
-        '张三17', '张三', '张三19', '张三20', '张三21', '张三22', '张三23', '张三24',
-        '张三25', '张三26', '张三27', '张三', '张三29', '李花花', '张三31', '张三32',
-        '张三33', '张三34', '张三35', '张三36', '张三37', '张三', '张三39', '张三40'
+        '张三', '李四', '可以', '自动', '添加', '删除', '学生', '姓名',
+        '张三01', '张三02', '张三03', '张三04'
       ],
       rolling: false,
       currentName: '',
-      intervalId: null
+      intervalId: null,
+      showEditDialog: false,
+      editingName: '',
+      editingIndex: -1
     };
   },
   computed: {
@@ -65,9 +86,61 @@ export default {
     },
     
     rollNames() {
+      let lastIndex = -1;
       this.intervalId = setInterval(() => {
-        this.currentName = this.getRandomName();
+        let randomIndex;
+        do {
+          randomIndex = Math.floor(Math.random() * this.names.length);
+        } while (randomIndex === lastIndex);
+        
+        lastIndex = randomIndex;
+        this.currentName = this.names[randomIndex];
       }, 100);
+    },
+
+    editName(index) {
+      if (!this.rolling) {
+        this.editingIndex = index;
+        this.editingName = this.names[index];
+        this.showEditDialog = true;
+        this.$nextTick(() => {
+          this.$refs.editInput.focus();
+        });
+      }
+    },
+
+    saveName() {
+      if (this.editingName.trim()) {
+        if (this.editingIndex === -1) {
+          // 添加新名字
+          this.names.push(this.editingName.trim());
+        } else {
+          // 编辑现有名字
+          this.names[this.editingIndex] = this.editingName.trim();
+        }
+      }
+      this.showEditDialog = false;
+    },
+
+    cancelEdit() {
+      this.showEditDialog = false;
+    },
+
+    deleteName(index) {
+      if (!this.rolling && this.names.length > 1) {
+        this.names = this.names.filter((_, i) => i !== index);
+      }
+    },
+
+    addNewName() {
+      if (!this.rolling) {
+        this.editingIndex = -1;
+        this.editingName = '';
+        this.showEditDialog = true;
+        this.$nextTick(() => {
+          this.$refs.editInput.focus();
+        });
+      }
     }
   }
 };
@@ -149,6 +222,22 @@ export default {
   box-shadow: 0 4px 15px rgba(139, 69, 19, 0.2);
 }
 
+.chinese-btn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateX(-100%);
+  transition: transform 0.6s ease;
+}
+
+.chinese-btn:hover::after {
+  transform: translateX(100%);
+}
+
 .name-item {
   background: #FFF8DC;
   padding: 0.8rem;
@@ -165,18 +254,99 @@ export default {
 }
 
 .name-item:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 5px 15px rgba(139, 69, 19, 0.2);
-  border-color: #D2691E;
-  background: #FFEFD5;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(139, 69, 19, 0.2);
 }
 
-.name-item.active {
-  background: linear-gradient(145deg, #8B4513, #A0522D);
+.name-content {
+  position: relative;
+  z-index: 1;
+}
+
+.name-actions {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  display: none;
+  gap: 0.2rem;
+  padding: 0.2rem;
+  z-index: 2;
+  background: rgba(255, 248, 220, 0.9);
+  border-radius: 4px;
+}
+
+.name-item:hover .name-actions {
+  display: flex;
+}
+
+.edit-btn, .delete-btn {
+  background: none;
+  border: none;
+  color: #8B4513;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.2rem;
+  line-height: 1;
+  opacity: 0.7;
+}
+
+.edit-btn:hover, .delete-btn:hover {
+  opacity: 1;
+}
+
+.edit-dialog {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.edit-content {
+  background: #FFF8DC;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.edit-content input {
+  padding: 0.5rem;
+  font-size: 1.1rem;
+  border: 1px solid #8B4513;
+  border-radius: 4px;
+  width: 200px;
+}
+
+.edit-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.save-btn, .cancel-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.save-btn {
+  background: #8B4513;
   color: #FFF8DC;
-  transform: scale(1.05);
-  box-shadow: 0 8px 20px rgba(139, 69, 19, 0.3);
-  border-color: #DAA520;
+}
+
+.cancel-btn {
+  background: #D3D3D3;
+  color: #4A4A4A;
 }
 
 .tips {
@@ -189,5 +359,58 @@ export default {
   font-size: 1.5rem;
   text-shadow: 1px 1px 2px rgba(139, 69, 19, 0.2);
   z-index: 10;
+}
+
+.add-item {
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(139, 69, 19, 0.1);
+  border: 2px dashed #8B4513;
+  font-size: 1.5rem;
+  color: #8B4513;
+  opacity: 0.7;
+}
+
+.add-item:hover {
+  background: rgba(139, 69, 19, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(139, 69, 19, 0.2);
+}
+
+.add-content {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.add-item:hover .add-content {
+  opacity: 1;
+}
+
+.name-item.active {
+  background: #8B4513;
+  color: #FFF8DC;
+  transform: scale(1.05);
+  box-shadow: 0 5px 15px rgba(139, 69, 19, 0.3);
+  animation: highlight 0.3s ease-in-out;
+}
+
+@keyframes highlight {
+  0% {
+    transform: scale(1);
+    background: #FFF8DC;
+    color: #4A4A4A;
+  }
+  50% {
+    transform: scale(1.1);
+    background: #8B4513;
+    color: #FFF8DC;
+  }
+  100% {
+    transform: scale(1.05);
+    background: #8B4513;
+    color: #FFF8DC;
+  }
 }
 </style>
