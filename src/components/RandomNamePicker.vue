@@ -6,10 +6,15 @@
       <!-- 中间部分 -->
       <div class="center-content">
         <h1 class="chinese-title">{{ currentName || '请开始点名' }}</h1>
-        <button @click="toggleRolling" 
-                class="chinese-btn">
-          {{ buttonText }}
-        </button>
+        <div class="button-group">
+          <button @click="toggleRolling" 
+                  class="chinese-btn">
+            {{ buttonText }}
+          </button>
+          <button @click="showImportDialog = true" class="import-btn">
+            导入名单
+          </button>
+        </div>
       </div>
       
       <!-- 底部名字列表 -->
@@ -45,6 +50,22 @@
         </div>
       </div>
     </div>
+
+    <!-- 导入弹窗 -->
+    <div v-if="showImportDialog" class="edit-dialog">
+      <div class="edit-content">
+        <textarea 
+          v-model="importNames"
+          placeholder="请输入姓名，每行一个名字，例如：&#10;曾美女&#10;仪佳美女&#10;曾仪佳美女"
+          rows="10"
+          class="import-textarea"
+        ></textarea>
+        <div class="edit-buttons">
+          <button @click="importNameList" class="save-btn">导入</button>
+          <button @click="showImportDialog = false" class="cancel-btn">取消</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -52,7 +73,8 @@
 export default {
   data() {
     return {
-      names: [
+      // 从 localStorage 读取数据，如果没有则使用默认值
+      names: JSON.parse(localStorage.getItem('studentNames')) || [
         '张三', '李四', '可以', '自动', '添加', '删除', '学生', '姓名',
         '张三01', '张三02', '张三03', '张三04'
       ],
@@ -61,7 +83,9 @@ export default {
       intervalId: null,
       showEditDialog: false,
       editingName: '',
-      editingIndex: -1
+      editingIndex: -1,
+      showImportDialog: false,
+      importNames: '',
     };
   },
   computed: {
@@ -141,6 +165,34 @@ export default {
           this.$refs.editInput.focus();
         });
       }
+    },
+
+    importNameList() {
+      if (this.importNames.trim()) {
+        // 将文本分割成数组，过滤空行
+        const nameList = this.importNames
+          .split('\n')
+          .map(name => name.trim())
+          .filter(name => name);
+        
+        if (nameList.length > 0) {
+          // 更新名单并保存到 localStorage
+          this.names = nameList;
+          localStorage.setItem('studentNames', JSON.stringify(nameList));
+        }
+      }
+      this.showImportDialog = false;
+      this.importNames = '';
+    }
+  },
+  // 添加 watch 来监听 names 数组的变化
+  watch: {
+    names: {
+      handler(newNames) {
+        // 将新的名单保存到 localStorage
+        localStorage.setItem('studentNames', JSON.stringify(newNames));
+      },
+      deep: true
     }
   }
 };
@@ -412,5 +464,41 @@ export default {
     background: #8B4513;
     color: #FFF8DC;
   }
+}
+
+.button-group {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.import-btn {
+  background: linear-gradient(145deg, #4A4A4A, #696969);
+  color: #FFF8DC;
+  border: none;
+  padding: 18px 40px;
+  font-size: 1.8rem;
+  font-family: 'STKaiti', 'KaiTi', serif;
+  border-radius: 50px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s ease;
+  box-shadow: 0 6px 20px rgba(74, 74, 74, 0.25);
+}
+
+.import-btn:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 8px 25px rgba(74, 74, 74, 0.35);
+  background: linear-gradient(145deg, #696969, #4A4A4A);
+}
+
+.import-textarea {
+  width: 300px;
+  padding: 0.5rem;
+  font-size: 1.1rem;
+  border: 1px solid #8B4513;
+  border-radius: 4px;
+  resize: vertical;
+  font-family: 'STKaiti', 'KaiTi', serif;
 }
 </style>
