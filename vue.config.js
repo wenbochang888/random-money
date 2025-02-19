@@ -1,23 +1,26 @@
 const fs = require('fs');
+const express = require('express');
 const https = require('https');
+const http = require('http');
+
+const app = express();
+const httpsOptions = {
+  key: fs.readFileSync('/usr/local/nginx/key.pem'),
+  cert: fs.readFileSync('/usr/local/nginx/cert.pem')
+};
 
 module.exports = {
   publicPath: '/wt/',
   devServer: {
     host: '0.0.0.0',
     port: 5656,
-    https: {
-      key: fs.readFileSync('/usr/local/nginx/key.pem'),
-      cert: fs.readFileSync('/usr/local/nginx/cert.pem')
-    },
+    https: httpsOptions,
     allowedHosts: 'all',
-    proxy: {
-      '^/wt': {
-        target: 'http://www.gdufe888.top:5656',
-        ws: true, // 启用 WebSocket 代理
-        changeOrigin: true,
-        secure: false
-      }
+    before: function(app, server, compiler) {
+      // Create an HTTP server
+      http.createServer(app).listen(5657, () => {
+        console.log('HTTP server running on port 5657');
+      });
     }
   }
 };
