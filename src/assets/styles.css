@@ -7,7 +7,9 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
+  min-height: 100vh;
+  -webkit-tap-highlight-color: transparent;
+  overflow-x: hidden;
 }
 
 #app {
@@ -18,6 +20,13 @@ body {
   padding: 20px;
   background-color: rgba(255, 255, 255, 0.8);
   border-radius: 10px;
+  
+  @media screen and (max-width: 768px) {
+    padding: 10px;
+    margin: 10px;
+    max-width: 100%;
+    border-radius: 8px;
+  }
 }
 
 button {

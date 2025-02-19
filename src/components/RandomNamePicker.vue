@@ -122,7 +122,7 @@ export default {
         
         lastIndex = randomIndex;
         this.currentName = this.names[randomIndex];
-      }, 100);
+      }, 130);
     },
 
     editName(index) {
@@ -197,6 +197,19 @@ export default {
       },
       deep: true
     }
+  },
+  mounted() {
+    // 禁用双击缩放
+    document.addEventListener('touchstart', (event) => {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+    
+    // 禁用双指缩放
+    document.addEventListener('gesturestart', (event) => {
+      event.preventDefault();
+    });
   }
 };
 </script>
