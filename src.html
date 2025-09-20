@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>死亡概率模拟器</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; }
+        button { padding: 10px 15px; background: #4CAF50; color: white; border: none; cursor: pointer; }
+        button:hover { background: #45a049; }
+        #result { margin-top: 20px; white-space: pre-wrap; }
+        .simulation { margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <h1>死亡概率模拟器</h1>
+    <p>每秒有1亿分之一的概率死亡，模拟你能存活多久：</p>
+    
+    <div class="simulation">
+        <button onclick="runSingleSimulation()">运行单次模拟</button>
+        <div id="singleResult"></div>
+    </div>
+    
+    <div class="simulation">
+        <button onclick="runBatchSimulation()">运行批量模拟（100次）</button>
+        <div id="batchResult"></div>
+    </div>
+    
+    <script>
+        // 每秒死亡概率
+        const DEATH_PROBABILITY = 1 / 100000000;
+        // 每年秒数（近似）
+        const SECONDS_PER_YEAR = 60 * 60 * 24 * 365;
+        
+        // 单次模拟
+        function runSingleSimulation() {
+            let secondsLived = 0;
+            
+            // 每秒检查是否死亡
+            while (Math.random() >= DEATH_PROBABILITY) {
+                secondsLived++;
+            }
+            
+            const yearsLived = secondsLived / SECONDS_PER_YEAR;
+            document.getElementById('singleResult').innerHTML = 
+                `你存活了 <strong>${yearsLived.toFixed(2)}</strong> 年`;
+        }
+        
+        // 批量模拟
+        function runBatchSimulation() {
+            let results = [];
+            const SIMULATIONS = 100;
+            
+            for (let i = 0; i < SIMULATIONS; i++) {
+                let secondsLived = 0;
+                while (Math.random() >= DEATH_PROBABILITY) {
+                    secondsLived++;
+                }
+                results.push(secondsLived / SECONDS_PER_YEAR);
+            }
+            
+            // 计算统计数据
+            const avg = results.reduce((a, b) => a + b, 0) / results.length;
+            const max = Math.max(...results);
+            const min = Math.min(...results);
+            
+            let output = `==== 100次模拟结果 ====\n`;
+            output += `平均存活时间: ${avg.toFixed(2)} 年\n`;
+            output += `最长存活时间: ${max.toFixed(2)} 年\n`;
+            output += `最短存活时间: ${min.toFixed(2)} 年\n\n`;
+            output += `详细数据:\n${results.map(y => y.toFixed(2)).join(', ')}`;
+            
+            document.getElementById('batchResult').innerHTML = 
+                `<pre>${output}</pre>`;
+        }
+    </script>
+</body>
+</html>

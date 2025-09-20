@@ -1,16 +1,16 @@
 <template>
   <div id="app">
-    <RandomNamePicker />
+    <DeathSimulator />
   </div>
 </template>
 
 <script>
-import RandomNamePicker from './components/RandomNamePicker.vue';
+import DeathSimulator from './components/DeathSimulator.vue';
 
 export default {
   name: 'App',
   components: {
-    RandomNamePicker
+    DeathSimulator
   }
 };
 </script>
@@ -20,18 +20,17 @@ html, body {
   margin: 0;
   padding: 0;
   height: 100%;
-  font-family: 'Microsoft YaHei', sans-serif;
+  font-family: Arial, sans-serif;
   overflow-y: auto !important;
 }
 
 body {
-  background: url('./assets/1.jpeg') no-repeat center center fixed;
-  background-size: cover;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
 #app {
   min-height: 100vh;
   overflow-y: auto !important;
-  background-color: rgba(255, 255, 255, 0.15);
+  background-color: rgba(255, 255, 255, 0.1);
 }
 </style>

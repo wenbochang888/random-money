@@ -1,9 +1,12 @@
 {
-  "name": "random-name-picker",
+  "name": "death-probability-simulator",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
+    "dev": "vue-cli-service serve --config vue.config.local.js",
+    "local": "vue-cli-service serve --https false --port 8080",
+    "prod-dev": "NODE_ENV=production vue-cli-service serve",
     "build": "vue-cli-service build"
   },
   "dependencies": {
