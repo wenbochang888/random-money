@@ -55,8 +55,7 @@
 ## 🔗 相关链接
 
 - 📱 [在线体验地址](https://www.gdufe888.top/wt/)
-- 💻 [源代码仓库](https://github.com/your-repo/death-probability-simulator)
-- 🐛 [问题反馈](https://github.com/your-repo/death-probability-simulator/issues)
+
 
 ## 🤝 贡献指南
 
