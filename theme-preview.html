@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>配色方案预览</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            padding: 40px 20px;
+            background: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 40px;
+            color: #333;
+        }
+
+        .theme-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .theme-card {
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .theme-card:hover {
+            transform: translateY(-10px);
+        }
+
+        .theme-preview {
+            height: 300px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .theme-preview h2 {
+            font-size: 2rem;
+            margin-bottom: 15px;
+        }
+
+        .theme-preview .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .theme-info {
+            padding: 25px;
+            background: white;
+        }
+
+        .theme-info h3 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .theme-info p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .theme-colors {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .color-box {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+        }
+
+        .switch-btn {
+            width: 100%;
+            padding: 12px;
+            background: #333;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .switch-btn:hover {
+            background: #555;
+        }
+
+        /* 各主题渐变 */
+        .purple-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .blue-gradient {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .orange-gradient {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .green-gradient {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .current-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            background: #4CAF50;
+            color: white;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-left: 10px;
+        }
+
+        .instructions {
+            margin-top: 40px;
+            padding: 30px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .instructions h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .instructions code {
+            background: #f0f0f0;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            color: #e74c3c;
+        }
+
+        .instructions pre {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 配色方案预览</h1>
+        
+        <div class="theme-grid">
+            <!-- 方案1：紫色 -->
+            <div class="theme-card">
+                <div class="theme-preview purple-gradient">
+                    <h2>🎮 互动体验中心</h2>
+                    <p class="subtitle">探索概率与决策的奇妙世界</p>
+                </div>
+                <div class="theme-info">
+                    <h3>方案1：紫色魔幻风 <span class="current-badge">当前</span></h3>
+                    <div class="theme-colors">
+                        <div class="color-box" style="background: #667eea"></div>
+                        <div class="color-box" style="background: #764ba2"></div>
+                    </div>
+                    <p><strong>特点：</strong>神秘优雅、视觉冲击力强</p>
+                    <p><strong>适合：</strong>概率和决策主题</p>
+                    <button class="switch-btn" onclick="alert('当前已使用此主题')">当前主题</button>
+                </div>
+            </div>
+
+            <!-- 方案2：蓝色 -->
+            <div class="theme-card">
+                <div class="theme-preview blue-gradient">
+                    <h2>🎮 互动体验中心</h2>
+                    <p class="subtitle">探索概率与决策的奇妙世界</p>
+                </div>
+                <div class="theme-info">
+                    <h3>方案2：蓝色科技风</h3>
+                    <div class="theme-colors">
+                        <div class="color-box" style="background: #4facfe"></div>
+                        <div class="color-box" style="background: #00f2fe"></div>
+                    </div>
+                    <p><strong>特点：</strong>清新科技、专业商务</p>
+                    <p><strong>适合：</strong>理性决策场景</p>
+                    <button class="switch-btn" onclick="copyCommand('./switch-theme.sh blue')">切换到此主题</button>
+                </div>
+            </div>
+
+            <!-- 方案3：橙红 -->
+            <div class="theme-card">
+                <div class="theme-preview orange-gradient">
+                    <h2>🎮 互动体验中心</h2>
+                    <p class="subtitle">探索概率与决策的奇妙世界</p>
+                </div>
+                <div class="theme-info">
+                    <h3>方案3：橙红渐变风</h3>
+                    <div class="theme-colors">
+                        <div class="color-box" style="background: #fa709a"></div>
+                        <div class="color-box" style="background: #fee140"></div>
+                    </div>
+                    <p><strong>特点：</strong>温暖活力、充满激情</p>
+                    <p><strong>适合：</strong>高风险博弈主题</p>
+                    <button class="switch-btn" onclick="copyCommand('./switch-theme.sh orange')">切换到此主题</button>
+                </div>
+            </div>
+
+            <!-- 方案4：绿色 -->
+            <div class="theme-card">
+                <div class="theme-preview green-gradient">
+                    <h2>🎮 互动体验中心</h2>
+                    <p class="subtitle">探索概率与决策的奇妙世界</p>
+                </div>
+                <div class="theme-info">
+                    <h3>方案4：绿色清新风</h3>
+                    <div class="theme-colors">
+                        <div class="color-box" style="background: #11998e"></div>
+                        <div class="color-box" style="background: #38ef7d"></div>
+                    </div>
+                    <p><strong>特点：</strong>自然清新、舒适护眼</p>
+                    <p><strong>适合：</strong>长时间使用</p>
+                    <button class="switch-btn" onclick="copyCommand('./switch-theme.sh green')">切换到此主题</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="instructions">
+            <h2>📖 切换说明</h2>
+            <p>有两种方式切换配色方案：</p>
+            
+            <h3>方式1：使用脚本（推荐）</h3>
+            <p>在项目根目录执行以下命令：</p>
+            <pre>./switch-theme.sh blue     # 蓝色科技风
+./switch-theme.sh orange   # 橙红渐变风
+./switch-theme.sh green    # 绿色清新风
+./switch-theme.sh purple   # 恢复紫色魔幻风</pre>
+
+            <h3>方式2：手动修改</h3>
+            <p>打开 <code>src/App.vue</code>，找到以下代码：</p>
+            <pre>body {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-attachment: fixed;
+}</pre>
+            <p>替换为您想要的渐变色即可。</p>
+
+            <h3>💡 提示</h3>
+            <p>修改后刷新浏览器即可看到效果，无需重启开发服务器。</p>
+        </div>
+    </div>
+
+    <script>
+        function copyCommand(cmd) {
+            navigator.clipboard.writeText(cmd).then(() => {
+                alert('命令已复制到剪贴板：\n' + cmd + '\n\n请在终端执行此命令');
+            }).catch(() => {
+                alert('请在终端执行：\n' + cmd);
+            });
+        }
+    </script>
+</body>
+</html>
+

@@ -1,5 +1,10 @@
 <template>
   <div class="death-simulator">
+    <!-- 返回按钮 -->
+    <button class="back-btn" @click="goBack">
+      ← 返回主页
+    </button>
+    
     <!-- 知乎问题链接标题 - 移到最顶部 -->
     <div class="zhihu-link-section">
       <a href="https://www.zhihu.com/question/1918581330402337118" target="_blank" class="zhihu-link">
@@ -148,6 +153,10 @@ export default {
     }
   },
   methods: {
+    // 返回主页
+    goBack() {
+      this.$emit('go-back');
+    },
     // 选择概率
     selectProbability(option) {
       this.selectedProbability = option;
@@ -334,6 +343,30 @@ export default {
   justify-content: center;
   align-items: center;
   padding: 20px;
+  position: relative;
+}
+
+.back-btn {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  padding: 12px 24px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #667eea;
+  border: 2px solid #667eea;
+  border-radius: 25px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+}
+
+.back-btn:hover {
+  background: #667eea;
+  color: white;
+  transform: translateX(-5px);
 }
 
 .container {
