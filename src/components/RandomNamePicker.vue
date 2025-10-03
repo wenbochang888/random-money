@@ -1,5 +1,10 @@
 <template>
   <div class="random-name-picker">
+    <!-- 返回按钮 -->
+    <button class="back-btn" @click="goBack">
+      ← 返回主页
+    </button>
+    
     <div class="tips">梧桐学校六年级英语教学组：仪佳大美女专属</div>
     <!-- 移除 container-fluid，使用自定义布局 -->
     <div class="content-wrapper">
@@ -97,6 +102,9 @@ export default {
     }
   },
   methods: {
+    goBack() {
+      this.$emit('go-back');
+    },
     toggleRolling() {
       if (this.rolling) {
         clearInterval(this.intervalId);
@@ -220,6 +228,29 @@ export default {
   width: 100%;
   overflow-y: auto !important;
   position: relative;
+}
+
+.back-btn {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  padding: 12px 24px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #667eea;
+  border: 2px solid #667eea;
+  border-radius: 25px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+}
+
+.back-btn:hover {
+  background: #667eea;
+  color: white;
+  transform: translateX(-5px);
 }
 
 .content-wrapper {
