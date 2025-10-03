@@ -196,6 +196,13 @@
     <div v-if="showParticles" class="particles-container">
       <div v-for="i in 30" :key="i" class="particle" :style="getParticleStyle(i)"></div>
     </div>
+
+    <!-- 底部作者信息 -->
+    <div class="author-footer">
+      <a href="https://github.com/wenbochang888/random-money" target="_blank" class="footer-link">GitHub</a>
+      <span class="footer-divider">|</span>
+      <span class="footer-text">微信公众号：《程序员博博》</span>
+    </div>
   </div>
 </template>
 
@@ -1011,5 +1018,34 @@ export default {
     padding: 10px 20px;
     font-size: 0.9rem;
   }
+}
+
+/* 底部作者信息样式 */
+.author-footer {
+  width: 100%;
+  text-align: center;
+  padding: 20px;
+  margin-top: 50px;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.footer-link {
+  color: rgba(255, 255, 255, 0.6);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.footer-link:hover {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.footer-divider {
+  margin: 0 10px;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.footer-text {
+  color: rgba(255, 255, 255, 0.5);
 }
 </style>
