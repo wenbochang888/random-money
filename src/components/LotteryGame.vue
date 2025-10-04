@@ -201,7 +201,7 @@
     <div class="author-footer">
       <a href="https://github.com/wenbochang888/random-money" target="_blank" class="footer-link">GitHub</a>
       <span class="footer-divider">|</span>
-      <span class="footer-text">微信公众号：《程序员博博》</span>
+      <span class="footer-text">微信公众号：程序员博博</span>
     </div>
   </div>
 </template>
@@ -972,8 +972,15 @@ export default {
 
 /* 响应式设计 */
 @media (max-width: 768px) {
+  .back-btn {
+    top: 15px;
+    left: 15px;
+    padding: 10px 18px;
+    font-size: 0.9rem;
+  }
+  
   .zhihu-link-section {
-    margin: 10px;
+    margin: 90px 10px 20px 10px;
     padding: 12px;
   }
   
@@ -1012,11 +1019,6 @@ export default {
 
   .result-amount {
     font-size: 2rem;
-  }
-
-  .back-btn {
-    padding: 10px 20px;
-    font-size: 0.9rem;
   }
 }
 

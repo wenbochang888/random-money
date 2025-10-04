@@ -1,7 +1,7 @@
 <template>
   <div class="home-page">
     <div class="header">
-      <h1 class="main-title">🎮 互动体验中心</h1>
+      <h1 class="main-title">概率游戏体验中心</h1>
       <p class="subtitle">探索概率与决策的奇妙世界</p>
     </div>
     
@@ -39,7 +39,7 @@
     <div class="author-footer">
       <a href="https://github.com/wenbochang888/random-money" target="_blank" class="footer-link">GitHub</a>
       <span class="footer-divider">|</span>
-      <span class="footer-text">微信公众号：《程序员博博》</span>
+      <span class="footer-text">微信公众号：程序员博博</span>
     </div>
   </div>
 </template>

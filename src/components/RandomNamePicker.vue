@@ -76,7 +76,7 @@
     <div class="author-footer">
       <a href="https://github.com/wenbochang888/random-money" target="_blank" class="footer-link">GitHub</a>
       <span class="footer-divider">|</span>
-      <span class="footer-text">微信公众号：《程序员博博》</span>
+      <span class="footer-text">微信公众号：程序员博博</span>
     </div>
   </div>
 </template>
@@ -554,6 +554,41 @@ export default {
   border-radius: 4px;
   resize: vertical;
   font-family: 'STKaiti', 'KaiTi', serif;
+}
+
+/* 移动端响应式设计 */
+@media (max-width: 768px) {
+  .back-btn {
+    top: 15px;
+    left: 15px;
+    padding: 10px 18px;
+    font-size: 0.9rem;
+  }
+  
+  .tips {
+    top: 80px;
+    font-size: 1.2rem;
+  }
+  
+  .chinese-title {
+    font-size: 2.5rem;
+  }
+  
+  .chinese-btn, .import-btn {
+    padding: 15px 35px;
+    font-size: 1.5rem;
+  }
+  
+  .button-group {
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+  
+  .name-grid {
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 1rem;
+    padding: 0.5rem;
+  }
 }
 
 /* 底部作者信息样式 */
