@@ -15,6 +15,19 @@
     <div class="container">
       <h1 class="title">死亡概率模拟器</h1>
       
+      <!-- 用户名输入区 -->
+      <div class="username-section">
+        <label class="username-label">请输入你的名字：</label>
+        <input 
+          v-model="userName" 
+          type="text" 
+          class="username-input"
+          placeholder="例如：小李"
+          maxlength="20"
+        />
+        <p class="username-hint">名字将用于记录和排行榜统计（留空则显示为"匿名用户"）</p>
+      </div>
+      
       <!-- 概率选择器 -->
       <div class="probability-section">
         <label class="probability-label">选择每秒死亡概率：</label>
@@ -61,6 +74,60 @@
             <p class="money-amount">{{ earnedMoney }}</p>
             <p class="money-description">每毫秒1亿 × 存活{{ (parseFloat(singleResult) * 31536000).toFixed(0) }}秒</p>
           </div>
+          
+          <!-- 分享按钮 -->
+          <div class="share-section">
+            <button @click="shareResult" class="share-btn">
+              🎉 一键分享结果
+            </button>
+            <transition name="fade">
+              <div v-if="showCopySuccess" class="copy-success">✅ 已复制到剪贴板！</div>
+            </transition>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 排行榜区域 -->
+      <div class="ranking-section">
+        <h2 class="ranking-title">🏆 排行榜 - {{ selectedProbability.label }}</h2>
+        <p class="ranking-subtitle">当前概率下存活时间最长的前10名</p>
+        
+        <div v-if="rankings.length === 0" class="ranking-empty">
+          <p>暂无排行数据，快来创造第一个记录吧！</p>
+        </div>
+        
+        <div v-else class="ranking-table-wrapper">
+          <table class="ranking-table">
+            <thead>
+              <tr>
+                <th class="rank-col">排名</th>
+                <th class="name-col">用户名</th>
+                <th class="survival-col">存活时间</th>
+                <th class="money-col">获得金额</th>
+                <th class="date-col">记录时间</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr 
+                v-for="(record, index) in rankings" 
+                :key="record.id"
+                :class="['ranking-row', { 'top-three': index < 3 }]"
+              >
+                <td class="rank-col">
+                  <span :class="['rank-badge', getRankClass(index)]">
+                    {{ index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : index + 1 }}
+                  </span>
+                </td>
+                <td class="name-col">{{ record.userName || '匿名用户' }}</td>
+                <td class="survival-col">
+                  <strong>{{ record.survivalYears.toFixed(2) }}</strong> 年
+                  <span class="days-text">({{ record.survivalDays }} 天)</span>
+                </td>
+                <td class="money-col">{{ record.earnedMoney }}</td>
+                <td class="date-col">{{ formatDate(record.timestamp) }}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -75,26 +142,34 @@
 </template>
 
 <script>
+import { insertRanking, getRankingByProbability } from '@/services/rankingService.js';
+
 export default {
   name: 'DeathSimulator',
   data() {
     return {
       // 每年秒数（近似）
       SECONDS_PER_YEAR: 60 * 60 * 24 * 365,
+      // 用户名（默认空字符串，提交时如果为空则使用"匿名用户"）
+      userName: '',
       // 概率选项（从小概率到大概率排列）
       probabilityOptions: [
-        { label: '十亿分之一', value: 1 / 1000000000, description: '1/1,000,000,000' },
-        { label: '一亿分之一', value: 1 / 100000000, description: '1/100,000,000' },
-        { label: '千万分之一', value: 1 / 10000000, description: '1/10,000,000' },
-        { label: '百万分之一', value: 1 / 1000000, description: '1/1,000,000' }
+        { label: '十亿分之一', value: 1 / 1000000000, description: '1/1,000,000,000', key: '1e-9' },
+        { label: '一亿分之一', value: 1 / 100000000, description: '1/100,000,000', key: '1e-8' },
+        { label: '千万分之一', value: 1 / 10000000, description: '1/10,000,000', key: '1e-7' },
+        { label: '百万分之一', value: 1 / 1000000, description: '1/1,000,000', key: '1e-6' }
       ],
       // 当前选中的概率（默认选择十亿分之一）
-      selectedProbability: { label: '十亿分之一', value: 1 / 1000000000, description: '1/1,000,000,000' },
+      selectedProbability: { label: '十亿分之一', value: 1 / 1000000000, description: '1/1,000,000,000', key: '1e-9' },
       // 状态管理
       isRunning: false,
       currentTime: '0.00',
       // 结果存储
-      singleResult: null
+      singleResult: null,
+      // 排行榜数据
+      rankings: [],
+      // 分享功能
+      showCopySuccess: false
     };
   },
   computed: {
@@ -159,10 +234,91 @@ export default {
       }
     }
   },
+  mounted() {
+    // 组件加载时获取当前概率的排行榜
+    this.loadRankings();
+  },
+  watch: {
+    // 监听概率变化，重新加载排行榜
+    'selectedProbability.key'() {
+      this.loadRankings();
+    }
+  },
   methods: {
     // 返回主页
     goBack() {
       this.$emit('go-back');
+    },
+    
+    // 加载排行榜数据
+    async loadRankings() {
+      try {
+        const result = await getRankingByProbability(this.selectedProbability.key, 10);
+        if (result.success) {
+          this.rankings = result.data.records;
+        }
+      } catch (error) {
+        console.error('加载排行榜失败:', error);
+      }
+    },
+    
+    // 保存记录到排行榜
+    async saveToRanking() {
+      console.log('===== saveToRanking 方法被调用 =====');
+      
+      if (!this.singleResult) {
+        console.warn('没有模拟结果，跳过保存');
+        return;
+      }
+      
+      const recordData = {
+        userName: this.userName.trim() || '匿名用户',
+        probability: this.selectedProbability.key,
+        probabilityLabel: this.selectedProbability.label,
+        survivalYears: parseFloat(this.singleResult),
+        survivalDays: parseInt(this.equivalentDays),
+        earnedMoney: this.earnedMoney,
+        earnedMoneyValue: this.earnedMoneyValue.toString()  // 转为字符串，避免超出Long范围
+      };
+      
+      console.log('准备保存的数据:', recordData);
+      
+      try {
+        console.log('开始调用 insertRanking...');
+        const result = await insertRanking(recordData);
+        console.log('insertRanking 返回结果:', result);
+        
+        if (result.success) {
+          console.log('✅ 记录已成功保存到排行榜');
+          // 重新加载排行榜
+          await this.loadRankings();
+        } else {
+          console.error('❌ 保存失败:', result.message);
+          alert('保存记录失败：' + result.message);
+        }
+      } catch (error) {
+        console.error('❌ 保存记录异常:', error);
+        alert('保存记录时发生错误：' + error.message);
+      }
+    },
+    
+    // 格式化日期显示
+    formatDate(isoString) {
+      const date = new Date(isoString);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      return `${year}-${month}-${day} ${hours}:${minutes}`;
+    },
+    
+    // 获取排名样式类
+    getRankClass(index) {
+      if (index === 0) return 'rank-first';
+      if (index === 1) return 'rank-second';
+      if (index === 2) return 'rank-third';
+      return '';
     },
     // 选择概率
     selectProbability(option) {
@@ -246,6 +402,9 @@ export default {
       // 设置最终结果
       this.singleResult = finalYearsLived.toFixed(2);
       this.isRunning = false;
+      
+      // 保存记录到排行榜
+      await this.saveToRanking();
     },
     
     // 使用几何分布计算死亡时间
@@ -337,6 +496,58 @@ export default {
       }
       
       return `${amount.toFixed(0)}元`;
+    },
+    
+    // 分享结果
+    async shareResult() {
+      const userName = this.userName.trim() || '我';
+      const years = parseFloat(this.singleResult);
+      const days = this.equivalentDays;
+      const money = this.earnedMoney;
+      
+      // 生成吸引人的分享文案
+      let shareText = '';
+      
+      if (years >= 1000) {
+        shareText = `🎉 太惊人了！${userName}在死亡概率模拟器中存活了 ${this.singleResult} 年，获得了 ${money}！\n\n你敢挑战吗？快来试试你能存活多久！\n\n网址：https://www.gdufe888.top/wt/\n\n微信公众号：程序员博博`;
+      } else if (years >= 100) {
+        shareText = `💪 厉害！${userName}在死亡概率模拟器中存活了 ${this.singleResult} 年（${days}天），赚取了 ${money}！\n\n你也来挑战一下，看看能否打破这个记录！\n\n网址：https://www.gdufe888.top/wt/\n\n微信公众号：程序员博博`;
+      } else if (years >= 10) {
+        shareText = `🎯 ${userName}在死亡概率模拟器中存活了 ${this.singleResult} 年，获得了 ${money}！\n\n这是运气还是实力？快来验证你的概率直觉！\n\n网址：https://www.gdufe888.top/wt/\n\n微信公众号：程序员博博`;
+      } else {
+        shareText = `😱 ${userName}在死亡概率模拟器中存活了 ${days} 天，获得了 ${money}！\n\n你的运气会更好吗？快来挑战概率的极限！\n\n网址：https://www.gdufe888.top/wt/\n\n微信公众号：程序员博博`;
+      }
+      
+      try {
+        // 使用现代剪贴板API
+        await navigator.clipboard.writeText(shareText);
+        this.showCopySuccess = true;
+        
+        // 3秒后隐藏提示
+        setTimeout(() => {
+          this.showCopySuccess = false;
+        }, 3000);
+      } catch (err) {
+        // 降级方案：使用传统方法
+        const textarea = document.createElement('textarea');
+        textarea.value = shareText;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        
+        try {
+          document.execCommand('copy');
+          this.showCopySuccess = true;
+          setTimeout(() => {
+            this.showCopySuccess = false;
+          }, 3000);
+        } catch (err2) {
+          alert('复制失败，请手动复制：\n\n' + shareText);
+        }
+        
+        document.body.removeChild(textarea);
+      }
     }
   }
 };
@@ -422,6 +633,52 @@ export default {
   text-align: center;
   margin-bottom: 30px;
   font-weight: bold;
+}
+
+/* 用户名输入区样式 */
+.username-section {
+  margin-bottom: 30px;
+  padding: 20px;
+  background: linear-gradient(135deg, #f0f4f8, #e3eaf2);
+  border-radius: 12px;
+  border: 2px solid rgba(102, 126, 234, 0.3);
+}
+
+.username-label {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 10px;
+}
+
+.username-input {
+  width: 100%;
+  padding: 12px 15px;
+  font-size: 1rem;
+  border: 2px solid #d1d9e6;
+  border-radius: 8px;
+  background: white;
+  color: #2c3e50;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+.username-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.username-input::placeholder {
+  color: #95a5a6;
+}
+
+.username-hint {
+  margin: 8px 0 0 0;
+  font-size: 0.85rem;
+  color: #7f8c8d;
+  font-style: italic;
 }
 
 /* 概率选择器样式 */
@@ -628,6 +885,54 @@ export default {
   margin-top: 8px;
 }
 
+/* 分享功能样式 */
+.share-section {
+  margin-top: 25px;
+  text-align: center;
+}
+
+.share-btn {
+  width: 100%;
+  padding: 15px 25px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(245, 87, 108, 0.3);
+}
+
+.share-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(245, 87, 108, 0.4);
+}
+
+.share-btn:active {
+  transform: translateY(0);
+}
+
+.copy-success {
+  margin-top: 15px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+  color: #2c3e50;
+  border-radius: 25px;
+  font-weight: 600;
+  font-size: 1rem;
+  box-shadow: 0 2px 10px rgba(168, 237, 234, 0.3);
+}
+
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -637,6 +942,154 @@ export default {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* 排行榜样式 */
+.ranking-section {
+  margin-top: 40px;
+  padding: 30px;
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  border-radius: 15px;
+  border: 2px solid #dee2e6;
+}
+
+.ranking-title {
+  font-size: 1.8rem;
+  color: #2c3e50;
+  text-align: center;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.ranking-subtitle {
+  text-align: center;
+  color: #7f8c8d;
+  font-size: 1rem;
+  margin-bottom: 25px;
+}
+
+.ranking-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: #95a5a6;
+  font-size: 1.1rem;
+}
+
+.ranking-table-wrapper {
+  overflow-x: auto;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.ranking-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  font-size: 0.95rem;
+}
+
+.ranking-table thead {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+}
+
+.ranking-table th {
+  padding: 15px 12px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.9rem;
+  letter-spacing: 0.5px;
+  color: white !important;
+}
+
+.ranking-table tbody tr {
+  border-bottom: 1px solid #f0f0f0;
+  transition: background 0.2s ease;
+}
+
+.ranking-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.ranking-table tbody tr.top-three {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.05), rgba(255, 223, 0, 0.1));
+}
+
+.ranking-table tbody tr.top-three:hover {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 223, 0, 0.15));
+}
+
+.ranking-table td {
+  padding: 12px;
+  color: #2c3e50;
+}
+
+.rank-col {
+  width: 80px;
+  text-align: center;
+}
+
+.rank-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.rank-badge.rank-first {
+  background: linear-gradient(135deg, #ffd700, #ffed4e);
+  color: #d35400;
+  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.4);
+}
+
+.rank-badge.rank-second {
+  background: linear-gradient(135deg, #c0c0c0, #e8e8e8);
+  color: #555;
+  box-shadow: 0 2px 8px rgba(192, 192, 192, 0.4);
+}
+
+.rank-badge.rank-third {
+  background: linear-gradient(135deg, #cd7f32, #e6a567);
+  color: white;
+  box-shadow: 0 2px 8px rgba(205, 127, 50, 0.4);
+}
+
+.name-col {
+  width: 120px;
+  font-weight: 600;
+  color: #667eea;
+}
+
+.survival-col {
+  width: 180px;
+}
+
+.survival-col strong {
+  color: #e74c3c;
+  font-size: 1.05rem;
+}
+
+.days-text {
+  display: block;
+  font-size: 0.85rem;
+  color: #95a5a6;
+  margin-top: 2px;
+}
+
+.money-col {
+  width: 150px;
+  color: #f39c12;
+  font-weight: 600;
+}
+
+.date-col {
+  width: 140px;
+  color: #7f8c8d;
+  font-size: 0.9rem;
 }
 
 /* 响应式设计 */
@@ -680,6 +1133,72 @@ export default {
   .sim-button {
     padding: 15px 20px;
     font-size: 1.1rem;
+  }
+  
+  .username-section {
+    padding: 15px;
+  }
+  
+  .username-label {
+    font-size: 1rem;
+  }
+  
+  .username-input {
+    padding: 10px 12px;
+    font-size: 0.95rem;
+  }
+  
+  .ranking-section {
+    padding: 20px 15px;
+  }
+  
+  .ranking-title {
+    font-size: 1.5rem;
+  }
+  
+  .ranking-subtitle {
+    font-size: 0.9rem;
+  }
+  
+  .ranking-table {
+    font-size: 0.85rem;
+  }
+  
+  .ranking-table th,
+  .ranking-table td {
+    padding: 10px 8px;
+  }
+  
+  .rank-col {
+    width: 60px;
+  }
+  
+  .rank-badge {
+    min-width: 30px;
+    height: 30px;
+    font-size: 0.95rem;
+  }
+  
+  .name-col {
+    width: 100px;
+  }
+  
+  .survival-col {
+    width: 140px;
+  }
+  
+  .days-text {
+    font-size: 0.75rem;
+  }
+  
+  .money-col {
+    width: 120px;
+    font-size: 0.85rem;
+  }
+  
+  .date-col {
+    width: 110px;
+    font-size: 0.8rem;
   }
 }
 

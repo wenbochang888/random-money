@@ -16,6 +16,19 @@
       <h1 class="title">🎰 风险抉择抽奖</h1>
       <p class="game-intro">用概率验证你的决策：博弈2亿 VS 稳定200万</p>
 
+      <!-- 用户名输入区 -->
+      <div class="username-section">
+        <label class="username-label">请输入你的名字：</label>
+        <input 
+          v-model="userName" 
+          type="text" 
+          class="username-input"
+          placeholder="例如：小李"
+          maxlength="20"
+        />
+        <p class="username-hint">名字将用于记录和排行榜统计（留空则显示为"匿名用户"）</p>
+      </div>
+
       <!-- 方案说明 -->
       <div class="plan-section">
         <div class="plan-comparison">
@@ -103,6 +116,16 @@
               </div>
             </div>
           </div>
+          
+          <!-- 分享按钮（单次） -->
+          <div class="share-section">
+            <button @click="shareResult" class="share-btn">
+              🎉 一键分享结果
+            </button>
+            <transition name="fade">
+              <div v-if="showCopySuccess" class="copy-success">✅ 已复制到剪贴板！</div>
+            </transition>
+          </div>
         </div>
 
         <!-- 多次结果 -->
@@ -162,33 +185,66 @@
               </p>
             </div>
           </div>
-
-          <!-- 详细结果列表 -->
-          <div class="results-list-section">
-            <div class="list-header" @click="toggleDetailList">
-              <h3>详细结果列表</h3>
-              <span class="toggle-icon">{{ showDetailList ? '▼' : '▶' }}</span>
-            </div>
-            <transition name="slide">
-              <div v-if="showDetailList" class="results-list">
-                <div 
-                  v-for="(result, index) in results" 
-                  :key="index"
-                  :class="['result-item', result.win ? 'win' : 'lose']"
-                >
-                  <span class="result-index">#{{ index + 1 }}</span>
-                  <span class="result-status-text">{{ result.win ? '✓ 恭喜中奖' : '✗ 未中' }}</span>
-                  <span class="result-amount-text">{{ formatMoney(result.amount) }}</span>
-                </div>
-              </div>
+          
+          <!-- 分享按钮 -->
+          <div class="share-section">
+            <button @click="shareResult" class="share-btn">
+              🎉 一键分享结果
+            </button>
+            <transition name="fade">
+              <div v-if="showCopySuccess" class="copy-success">✅ 已复制到剪贴板！</div>
             </transition>
           </div>
         </div>
-
-        <!-- 重新抽奖按钮 -->
-        <button @click="resetGame" class="reset-btn">
-          再来一次
-        </button>
+      </div>
+      
+      <!-- 排行榜区域 -->
+      <div class="ranking-section">
+        <h2 class="ranking-title">🏆 排行榜 - {{ lotteryTimesLabel || '单次抽奖' }}</h2>
+        <p class="ranking-subtitle">当前抽奖次数下方案B总收益最高的前10名</p>
+        
+        <div v-if="rankings.length === 0" class="ranking-empty">
+          <p>暂无排行数据，快来创造第一个记录吧！</p>
+        </div>
+        
+        <div v-else class="ranking-table-wrapper">
+          <table class="ranking-table">
+            <thead>
+              <tr>
+                <th class="rank-col">排名</th>
+                <th class="name-col">用户名</th>
+                <th class="times-col">抽奖次数</th>
+                <th class="amount-col">方案B总收益</th>
+                <th class="win-col">成功/失败</th>
+                <th class="rate-col">成功率</th>
+                <th class="date-col">记录时间</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr 
+                v-for="(record, index) in rankings" 
+                :key="record.id"
+                :class="['ranking-row', { 'top-three': index < 3 }]"
+              >
+                <td class="rank-col">
+                  <span :class="['rank-badge', getRankClass(index)]">
+                    {{ index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : index + 1 }}
+                  </span>
+                </td>
+                <td class="name-col">{{ record.userName || '匿名用户' }}</td>
+                <td class="times-col">{{ record.lotteryTimesLabel }}</td>
+                <td class="amount-col">{{ formatMoney(record.totalAmountB) }}</td>
+                <td class="win-col">
+                  <span class="win-count">{{ record.winCount }}</span>
+                  <span class="separator">/</span>
+                  <span class="lose-count">{{ record.loseCount }}</span>
+                </td>
+                <td class="rate-col">{{ record.winRate.toFixed(1) }}%</td>
+                <td class="date-col">{{ formatDate(record.timestamp) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -207,17 +263,24 @@
 </template>
 
 <script>
+import { insertLotteryRanking, getLotteryRankingByTimes } from '@/services/rankingService.js';
+
 export default {
   name: 'LotteryGame',
   data() {
     return {
+      // 用户名（默认空字符串，提交时如果为空则使用"匿名用户"）
+      userName: '',
       selectedTimes: null, // 1, 10, 100
       isRunning: false,
       showResult: false,
       currentRound: 0,
       results: [],
-      showDetailList: false,
-      showParticles: false
+      showParticles: false,
+      // 排行榜数据
+      rankings: [],
+      // 分享功能
+      showCopySuccess: false
     };
   },
   computed: {
@@ -243,11 +306,98 @@ export default {
     totalAmountA() {
       // 方案A：100% * 200万 * 次数
       return 2000000 * this.selectedTimes;
+    },
+    // 获取抽奖次数标签
+    lotteryTimesLabel() {
+      const labels = {
+        1: '单次抽奖',
+        10: '10次抽奖',
+        100: '100次抽奖',
+        1000: '1000次抽奖',
+        10000: '10000次抽奖'
+      };
+      return labels[this.selectedTimes] || '';
+    }
+  },
+  mounted() {
+    // 组件加载时，默认加载单次抽奖的排行榜
+    this.loadRankings(1);
+  },
+  watch: {
+    // 监听抽奖次数变化，重新加载排行榜
+    selectedTimes(newTimes) {
+      if (newTimes) {
+        this.loadRankings(newTimes);
+      }
     }
   },
   methods: {
     goBack() {
       this.$emit('go-back');
+    },
+    
+    // 加载排行榜数据
+    async loadRankings(times) {
+      try {
+        const result = await getLotteryRankingByTimes(times || this.selectedTimes || 1, 10);
+        if (result.success) {
+          this.rankings = result.data.records;
+        }
+      } catch (error) {
+        console.error('加载风险抉择抽奖排行榜失败:', error);
+      }
+    },
+    
+    // 保存记录到排行榜
+    async saveToRanking() {
+      if (!this.selectedTimes || this.results.length === 0) {
+        console.warn('没有抽奖结果，跳过保存');
+        return;
+      }
+      
+      const recordData = {
+        userName: this.userName.trim() || '匿名用户',
+        lotteryTimes: this.selectedTimes,
+        lotteryTimesLabel: this.lotteryTimesLabel,
+        totalAmountB: this.totalAmountB,
+        winCount: this.winCount,
+        loseCount: this.loseCount,
+        winRate: parseFloat(this.winRate)
+      };
+      
+      console.log('准备保存风险抉择抽奖数据:', recordData);
+      
+      try {
+        const result = await insertLotteryRanking(recordData);
+        if (result.success) {
+          console.log('✅ 风险抉择抽奖记录已成功保存到排行榜');
+          // 重新加载排行榜
+          await this.loadRankings(this.selectedTimes);
+        } else {
+          console.error('❌ 保存失败:', result.message);
+        }
+      } catch (error) {
+        console.error('❌ 保存风险抉择抽奖记录异常:', error);
+      }
+    },
+    
+    // 格式化日期显示
+    formatDate(isoString) {
+      const date = new Date(isoString);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      return `${year}-${month}-${day} ${hours}:${minutes}`;
+    },
+    
+    // 获取排名样式类
+    getRankClass(index) {
+      if (index === 0) return 'rank-first';
+      if (index === 1) return 'rank-second';
+      if (index === 2) return 'rank-third';
+      return '';
     },
     async selectAndStartLottery(times) {
       if (this.isRunning) return;
@@ -311,6 +461,9 @@ export default {
       // 显示结果
       await this.sleep(100);
       this.showResult = true;
+      
+      // 保存记录到排行榜
+      await this.saveToRanking();
     },
     performSingleLottery() {
       // 方案B：99%获得2亿，1%获得0
@@ -342,15 +495,6 @@ export default {
       const prefix = diff >= 0 ? '+' : '';
       return prefix + this.formatMoney(Math.abs(diff));
     },
-    toggleDetailList() {
-      this.showDetailList = !this.showDetailList;
-    },
-    resetGame() {
-      this.showResult = false;
-      this.results = [];
-      this.selectedTimes = null;
-      this.showDetailList = false;
-    },
     sleep(ms) {
       return new Promise(resolve => setTimeout(resolve, ms));
     },
@@ -365,6 +509,66 @@ export default {
         '--duration': duration + 's',
         '--delay': (Math.random() * 0.5) + 's'
       };
+    },
+    
+    // 分享结果
+    async shareResult() {
+      const userName = this.userName.trim() || '我';
+      const times = this.selectedTimes;
+      const winCount = this.winCount;
+      const loseCount = this.loseCount;
+      const totalMoney = this.formatMoney(this.totalAmountB);
+      const winRate = this.winRate;
+      
+      // 生成吸引人的分享文案
+      let shareText = '';
+      
+      if (times === 1) {
+        // 单次抽奖
+        if (this.results[0].win) {
+          shareText = `🎊 天选之人！${userName}在风险抉择抽奖中成功抓住了99%的概率，一次性获得2亿元！\n\n你敢挑战吗？99%的2亿 vs 100%的200万，你会怎么选？\n\n网址：https://www.gdufe888.top/wt/\n\n微信公众号：程序员博博`;
+        } else {
+          shareText = `😱 ${userName}在风险抉择抽奖中抽到了那1%...与2亿擦肩而过！\n\n你的运气会更好吗？99%的2亿 vs 100%的200万，快来试试！\n\n网址：https://www.gdufe888.top/wt/\n\n微信公众号：程序员博博`;
+        }
+      } else {
+        // 多次抽奖
+        if (this.totalAmountB > this.totalAmountA) {
+          shareText = `🎉 厉害了！${userName}进行了${times}次风险抉择，成功${winCount}次，总收益${totalMoney}，战胜了稳定方案！\n\n实际成功率${winRate}%，你敢挑战概率吗？\n\n网址：https://www.gdufe888.top/wt/\n\n微信公众号：程序员博博`;
+        } else {
+          shareText = `😂 ${userName}进行了${times}次风险抉择，成功${winCount}次、失败${loseCount}次，成功率${winRate}%，总收益${totalMoney}\n\n你的运气会更好吗？快来挑战99%的2亿！\n\n网址：https://www.gdufe888.top/wt/\n\n微信公众号：程序员博博`;
+        }
+      }
+      
+      try {
+        // 使用现代剪贴板API
+        await navigator.clipboard.writeText(shareText);
+        this.showCopySuccess = true;
+        
+        // 3秒后隐藏提示
+        setTimeout(() => {
+          this.showCopySuccess = false;
+        }, 3000);
+      } catch (err) {
+        // 降级方案：使用传统方法
+        const textarea = document.createElement('textarea');
+        textarea.value = shareText;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        
+        try {
+          document.execCommand('copy');
+          this.showCopySuccess = true;
+          setTimeout(() => {
+            this.showCopySuccess = false;
+          }, 3000);
+        } catch (err2) {
+          alert('复制失败，请手动复制：\n\n' + shareText);
+        }
+        
+        document.body.removeChild(textarea);
+      }
     }
   }
 };
@@ -456,6 +660,52 @@ export default {
   color: #7f8c8d;
   font-size: 1.1rem;
   margin-bottom: 40px;
+}
+
+/* 用户名输入区样式 */
+.username-section {
+  margin-bottom: 30px;
+  padding: 20px;
+  background: linear-gradient(135deg, #f0f4f8, #e3eaf2);
+  border-radius: 12px;
+  border: 2px solid rgba(102, 126, 234, 0.3);
+}
+
+.username-label {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 10px;
+}
+
+.username-input {
+  width: 100%;
+  padding: 12px 15px;
+  font-size: 1rem;
+  border: 2px solid #d1d9e6;
+  border-radius: 8px;
+  background: white;
+  color: #2c3e50;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+.username-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.username-input::placeholder {
+  color: #95a5a6;
+}
+
+.username-hint {
+  margin: 8px 0 0 0;
+  font-size: 0.85rem;
+  color: #7f8c8d;
+  font-style: italic;
 }
 
 .section-title {
@@ -815,6 +1065,56 @@ export default {
   color: #e74c3c;
 }
 
+/* 分享功能样式 */
+.share-section {
+  margin-top: 30px;
+  text-align: center;
+}
+
+.share-btn {
+  width: 100%;
+  max-width: 400px;
+  padding: 15px 25px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(245, 87, 108, 0.3);
+}
+
+.share-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(245, 87, 108, 0.4);
+}
+
+.share-btn:active {
+  transform: translateY(0);
+}
+
+.copy-success {
+  margin-top: 15px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+  color: #2c3e50;
+  border-radius: 25px;
+  font-weight: 600;
+  font-size: 1rem;
+  box-shadow: 0 2px 10px rgba(168, 237, 234, 0.3);
+  display: inline-block;
+}
+
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+}
+
 .results-list-section {
   background: white;
   border-radius: 15px;
@@ -970,6 +1270,172 @@ export default {
   }
 }
 
+/* 排行榜样式 */
+.ranking-section {
+  margin-top: 40px;
+  padding: 30px;
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  border-radius: 15px;
+  border: 2px solid #dee2e6;
+}
+
+.ranking-title {
+  font-size: 1.8rem;
+  color: #2c3e50;
+  text-align: center;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.ranking-subtitle {
+  text-align: center;
+  color: #7f8c8d;
+  font-size: 1rem;
+  margin-bottom: 25px;
+}
+
+.ranking-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: #95a5a6;
+  font-size: 1.1rem;
+}
+
+.ranking-table-wrapper {
+  overflow-x: auto;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.ranking-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  font-size: 0.95rem;
+}
+
+.ranking-table thead {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+}
+
+.ranking-table th {
+  padding: 15px 12px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.9rem;
+  letter-spacing: 0.5px;
+  color: white !important;
+}
+
+.ranking-table tbody tr {
+  border-bottom: 1px solid #f0f0f0;
+  transition: background 0.2s ease;
+}
+
+.ranking-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.ranking-table tbody tr.top-three {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.05), rgba(255, 223, 0, 0.1));
+}
+
+.ranking-table tbody tr.top-three:hover {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 223, 0, 0.15));
+}
+
+.ranking-table td {
+  padding: 12px;
+  color: #2c3e50;
+}
+
+.rank-col {
+  width: 80px;
+  text-align: center;
+}
+
+.rank-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.rank-badge.rank-first {
+  background: linear-gradient(135deg, #ffd700, #ffed4e);
+  color: #d35400;
+  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.4);
+}
+
+.rank-badge.rank-second {
+  background: linear-gradient(135deg, #c0c0c0, #e8e8e8);
+  color: #555;
+  box-shadow: 0 2px 8px rgba(192, 192, 192, 0.4);
+}
+
+.rank-badge.rank-third {
+  background: linear-gradient(135deg, #cd7f32, #e6a567);
+  color: white;
+  box-shadow: 0 2px 8px rgba(205, 127, 50, 0.4);
+}
+
+.name-col {
+  width: 120px;
+  font-weight: 600;
+  color: #667eea;
+}
+
+.times-col {
+  width: 120px;
+  color: #3498db;
+  font-weight: 500;
+}
+
+.amount-col {
+  width: 150px;
+  color: #f39c12;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.win-col {
+  width: 120px;
+  text-align: center;
+}
+
+.win-count {
+  color: #4CAF50;
+  font-weight: 600;
+}
+
+.separator {
+  margin: 0 4px;
+  color: #95a5a6;
+}
+
+.lose-count {
+  color: #e74c3c;
+  font-weight: 600;
+}
+
+.rate-col {
+  width: 100px;
+  text-align: center;
+  color: #8e44ad;
+  font-weight: 600;
+}
+
+.date-col {
+  width: 140px;
+  color: #7f8c8d;
+  font-size: 0.9rem;
+}
+
 /* 响应式设计 */
 @media (max-width: 768px) {
   .back-btn {
@@ -996,6 +1462,19 @@ export default {
     font-size: 2rem;
   }
 
+  .username-section {
+    padding: 15px;
+  }
+  
+  .username-label {
+    font-size: 1rem;
+  }
+  
+  .username-input {
+    padding: 10px 12px;
+    font-size: 0.95rem;
+  }
+
   .plan-comparison {
     grid-template-columns: 1fr;
     gap: 15px;
@@ -1019,6 +1498,66 @@ export default {
 
   .result-amount {
     font-size: 2rem;
+  }
+  
+  .ranking-section {
+    padding: 20px 15px;
+  }
+  
+  .ranking-title {
+    font-size: 1.5rem;
+  }
+  
+  .ranking-subtitle {
+    font-size: 0.9rem;
+  }
+  
+  .ranking-table {
+    font-size: 0.85rem;
+  }
+  
+  .ranking-table th,
+  .ranking-table td {
+    padding: 10px 8px;
+  }
+  
+  .rank-col {
+    width: 60px;
+  }
+  
+  .rank-badge {
+    min-width: 30px;
+    height: 30px;
+    font-size: 0.95rem;
+  }
+  
+  .name-col {
+    width: 100px;
+  }
+  
+  .times-col {
+    width: 100px;
+    font-size: 0.85rem;
+  }
+  
+  .amount-col {
+    width: 120px;
+    font-size: 0.9rem;
+  }
+  
+  .win-col {
+    width: 100px;
+    font-size: 0.85rem;
+  }
+  
+  .rate-col {
+    width: 80px;
+    font-size: 0.85rem;
+  }
+  
+  .date-col {
+    width: 110px;
+    font-size: 0.8rem;
   }
 }
 
