@@ -24,13 +24,16 @@
  *    Response: { success: boolean, data: RankingRecord[], message: string }
  */
 
+// 引入签名工具（混淆版本，防止F12破解）
+import SignUtil from '@/utils/sign.js';
+
 // ==================== 配置项 ====================
 
 // 是否使用后端API（true: 使用后端, false: 使用localStorage）
 const USE_BACKEND_API = true;
 
-// 后端API基础URL（远程服务器地址）
-const API_BASE_URL = 'https://www.gdufe888.top/api/v1';
+// 后端API基础URL（本地测试地址）
+const API_BASE_URL = 'http://localhost:8099/api/v1';
 
 // localStorage存储键名
 const STORAGE_KEY = 'death_simulator_rankings';
@@ -235,11 +238,38 @@ function getRankingsByUserLocal(userName) {
  * 插入排行记录（后端API版本）
  */
 async function insertRankingAPI(recordData) {
-  const url = `${API_BASE_URL}/rankings`;
+  // 准备签名参数（所有参数转为字符串）
+  const params = {
+    userName: String(recordData.userName || ''),
+    probability: String(recordData.probability || ''),
+    probabilityLabel: String(recordData.probabilityLabel || ''),
+    survivalYears: String(recordData.survivalYears || ''),
+    survivalDays: String(recordData.survivalDays || ''),
+    earnedMoney: String(recordData.earnedMoney || ''),
+    earnedMoneyValue: String(recordData.earnedMoneyValue || '')
+  };
+  
+  // 生成签名（包含timestamp和token）
+  const signedParams = SignUtil.sign(params);
+  
+  // 构建带签名的URL（用于拦截器验证）
+  const queryString = new URLSearchParams(signedParams).toString();
+  const url = `${API_BASE_URL}/rankings?${queryString}`;
+  
+  // 准备RequestBody数据（用于Controller接收）
+  const requestBody = {
+    userName: recordData.userName,
+    probability: recordData.probability,
+    probabilityLabel: recordData.probabilityLabel,
+    survivalYears: recordData.survivalYears,
+    survivalDays: recordData.survivalDays,
+    earnedMoney: recordData.earnedMoney,
+    earnedMoneyValue: recordData.earnedMoneyValue
+  };
   
   console.log('===== 开始发送插入请求 =====');
-  console.log('请求URL:', url);
-  console.log('请求数据:', JSON.stringify(recordData, null, 2));
+  console.log('请求URL:', url.replace(/token=[^&]+/, 'token=***'));
+  console.log('请求Body:', JSON.stringify(requestBody, null, 2));
   
   try {
     const response = await fetch(url, {
@@ -247,14 +277,12 @@ async function insertRankingAPI(recordData) {
       headers: {
         'Content-Type': 'application/json; charset=UTF-8'
       },
-      body: JSON.stringify(recordData)
+      body: JSON.stringify(requestBody)
     });
     
     console.log('响应状态码:', response.status);
-    console.log('响应状态文本:', response.statusText);
     
     const result = await response.json();
-    console.log('响应数据:', JSON.stringify(result, null, 2));
     
     // 检查HTTP状态码
     if (!response.ok) {
@@ -271,7 +299,6 @@ async function insertRankingAPI(recordData) {
   } catch (error) {
     console.error('===== 插入请求异常 =====');
     console.error('错误信息:', error);
-    console.error('错误堆栈:', error.stack);
     return {
       success: false,
       data: null,
@@ -285,8 +312,18 @@ async function insertRankingAPI(recordData) {
  */
 async function getRankingByProbabilityAPI(probability, limit = 10) {
   try {
+    // 准备签名参数
+    const params = {
+      probability: String(probability),
+      limit: String(limit)
+    };
+    
+    // 生成签名
+    const signedParams = SignUtil.sign(params);
+    const queryString = new URLSearchParams(signedParams).toString();
+    
     const response = await fetch(
-      `${API_BASE_URL}/rankings?probability=${probability}&limit=${limit}`,
+      `${API_BASE_URL}/rankings?${queryString}`,
       {
         headers: {
           'Accept': 'application/json; charset=UTF-8'
@@ -311,7 +348,16 @@ async function getRankingByProbabilityAPI(probability, limit = 10) {
  */
 async function getAllRankingsAPI(limit = 10) {
   try {
-    const response = await fetch(`${API_BASE_URL}/rankings/all?limit=${limit}`);
+    // 准备签名参数
+    const params = {
+      limit: String(limit)
+    };
+    
+    // 生成签名
+    const signedParams = SignUtil.sign(params);
+    const queryString = new URLSearchParams(signedParams).toString();
+    
+    const response = await fetch(`${API_BASE_URL}/rankings/all?${queryString}`);
     
     const result = await response.json();
     return result;
@@ -335,7 +381,16 @@ async function getAllRankingsAPI(limit = 10) {
  */
 async function getRankingsByUserAPI(userName) {
   try {
-    const response = await fetch(`${API_BASE_URL}/rankings/user/${encodeURIComponent(userName)}`);
+    // 准备签名参数
+    const params = {
+      userName: String(userName)
+    };
+    
+    // 生成签名
+    const signedParams = SignUtil.sign(params);
+    const queryString = new URLSearchParams(signedParams).toString();
+    
+    const response = await fetch(`${API_BASE_URL}/rankings/user/${encodeURIComponent(userName)}?${queryString}`);
     
     const result = await response.json();
     return result;
@@ -616,12 +671,40 @@ async function insertLotteryRankingAPI(recordData) {
   // 转换为死亡模拟器格式
   const adaptedData = adaptLotteryToRankingFormat(recordData);
   
-  const url = `${API_BASE_URL}/rankings`;  // 使用死亡模拟器的接口
+  // 准备签名参数（所有参数转为字符串）
+  const params = {
+    userName: String(adaptedData.userName || ''),
+    probability: String(adaptedData.probability || ''),
+    probabilityLabel: String(adaptedData.probabilityLabel || ''),
+    survivalYears: String(adaptedData.survivalYears || ''),
+    survivalDays: String(adaptedData.survivalDays || ''),
+    earnedMoney: String(adaptedData.earnedMoney || ''),
+    earnedMoneyValue: String(adaptedData.earnedMoneyValue || '')
+  };
+  
+  // 生成签名（包含timestamp和token）
+  const signedParams = SignUtil.sign(params);
+  
+  // 构建带签名的URL（用于拦截器验证）
+  const queryString = new URLSearchParams(signedParams).toString();
+  const url = `${API_BASE_URL}/rankings?${queryString}`;  // 使用死亡模拟器的接口
+  
+  // 准备RequestBody数据（用于Controller接收）
+  const requestBody = {
+    userName: adaptedData.userName,
+    probability: adaptedData.probability,
+    probabilityLabel: adaptedData.probabilityLabel,
+    survivalYears: adaptedData.survivalYears,
+    survivalDays: adaptedData.survivalDays,
+    earnedMoney: adaptedData.earnedMoney,
+    earnedMoneyValue: adaptedData.earnedMoneyValue
+  };
   
   console.log('===== 开始发送风险抉择抽奖插入请求（使用死亡模拟器接口） =====');
-  console.log('请求URL:', url);
+  console.log('请求URL:', url.replace(/token=[^&]+/, 'token=***'));
   console.log('原始数据:', JSON.stringify(recordData, null, 2));
   console.log('适配后数据:', JSON.stringify(adaptedData, null, 2));
+  console.log('请求Body:', JSON.stringify(requestBody, null, 2));
   
   try {
     const response = await fetch(url, {
@@ -629,11 +712,10 @@ async function insertLotteryRankingAPI(recordData) {
       headers: {
         'Content-Type': 'application/json; charset=UTF-8'
       },
-      body: JSON.stringify(adaptedData)
+      body: JSON.stringify(requestBody)
     });
     
     console.log('响应状态码:', response.status);
-    console.log('响应状态文本:', response.statusText);
     
     const result = await response.json();
     console.log('响应数据:', JSON.stringify(result, null, 2));
@@ -674,8 +756,18 @@ async function getLotteryRankingByTimesAPI(lotteryTimes, limit = 10) {
   const probability = `lottery-${lotteryTimes}`;
   
   try {
+    // 准备签名参数
+    const params = {
+      probability: String(probability),
+      limit: String(limit)
+    };
+    
+    // 生成签名
+    const signedParams = SignUtil.sign(params);
+    const queryString = new URLSearchParams(signedParams).toString();
+    
     const response = await fetch(
-      `${API_BASE_URL}/rankings?probability=${probability}&limit=${limit}`,  // 使用死亡模拟器的接口
+      `${API_BASE_URL}/rankings?${queryString}`,  // 使用死亡模拟器的接口
       {
         headers: {
           'Accept': 'application/json; charset=UTF-8'
