@@ -24,7 +24,7 @@
           type="text" 
           class="username-input"
           placeholder="例如：小李"
-          maxlength="20"
+          maxlength="6"
         />
         <p class="username-hint">名字将用于记录和排行榜统计（留空则显示为"匿名用户"）</p>
       </div>
@@ -59,10 +59,10 @@
 
       <!-- 次数选择 -->
       <div class="times-section">
-        <h2 class="section-title">选择抽奖次数（点击立即开始）</h2>
+        <!-- <h2 class="section-title">选择抽奖次数（点击立即开始）</h2> -->
         <div class="times-buttons">
           <button 
-            v-for="times in [1, 10, 100, 1000, 10000]" 
+            v-for="times in [10000, 1000, 100, 10, 1]" 
             :key="times"
             @click="selectAndStartLottery(times)"
             :disabled="isRunning"
@@ -213,10 +213,8 @@
               <tr>
                 <th class="rank-col">排名</th>
                 <th class="name-col">用户名</th>
-                <th class="times-col">抽奖次数</th>
                 <th class="amount-col">方案B总收益</th>
                 <th class="win-col">成功/失败</th>
-                <th class="rate-col">成功率</th>
                 <th class="date-col">记录时间</th>
               </tr>
             </thead>
@@ -232,14 +230,12 @@
                   </span>
                 </td>
                 <td class="name-col">{{ record.userName || '匿名用户' }}</td>
-                <td class="times-col">{{ record.lotteryTimesLabel }}</td>
                 <td class="amount-col">{{ formatMoney(record.totalAmountB) }}</td>
                 <td class="win-col">
                   <span class="win-count">{{ record.winCount }}</span>
                   <span class="separator">/</span>
                   <span class="lose-count">{{ record.loseCount }}</span>
                 </td>
-                <td class="rate-col">{{ record.winRate.toFixed(1) }}%</td>
                 <td class="date-col">{{ formatDate(record.timestamp) }}</td>
               </tr>
             </tbody>
@@ -271,7 +267,7 @@ export default {
     return {
       // 用户名（默认空字符串，提交时如果为空则使用"匿名用户"）
       userName: '',
-      selectedTimes: null, // 1, 10, 100
+      selectedTimes: 10000, // 默认10000次，与排行榜默认显示一致
       isRunning: false,
       showResult: false,
       currentRound: 0,
@@ -320,8 +316,8 @@ export default {
     }
   },
   mounted() {
-    // 组件加载时，默认加载单次抽奖的排行榜
-    this.loadRankings(1);
+    // 组件加载时，默认加载10000次抽奖的排行榜
+    this.loadRankings(10000);
   },
   watch: {
     // 监听抽奖次数变化，重新加载排行榜

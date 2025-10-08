@@ -23,7 +23,7 @@
           type="text" 
           class="username-input"
           placeholder="例如：小李"
-          maxlength="20"
+          maxlength="6"
         />
         <p class="username-hint">名字将用于记录和排行榜统计（留空则显示为"匿名用户"）</p>
       </div>
@@ -294,11 +294,11 @@ export default {
           await this.loadRankings();
         } else {
           console.error('❌ 保存失败:', result.message);
-          alert('保存记录失败：' + result.message);
+          // 静默处理失败，不弹窗提示
         }
       } catch (error) {
         console.error('❌ 保存记录异常:', error);
-        alert('保存记录时发生错误：' + error.message);
+        // 静默处理异常，不弹窗提示
       }
     },
     
