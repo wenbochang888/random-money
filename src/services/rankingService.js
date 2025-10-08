@@ -32,8 +32,8 @@ import SignUtil from '@/utils/sign.js';
 // 是否使用后端API（true: 使用后端, false: 使用localStorage）
 const USE_BACKEND_API = true;
 
-// 后端API基础URL（本地测试地址）
-const API_BASE_URL = 'http://localhost:8099/api/v1';
+// 后端API基础URL（远程服务器地址）
+const API_BASE_URL = 'https://www.gdufe888.top/api/v1';
 
 // localStorage存储键名
 const STORAGE_KEY = 'death_simulator_rankings';
