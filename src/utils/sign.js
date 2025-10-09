@@ -1,9 +1,9 @@
 /**
- * 签名工具（代码混淆版本）
- * 注意：不要格式化此文件，否则会破坏混淆效果
+ * 签名工具
+ * 注意：不要格式化此文件
  */
 
-// 混淆的MD5实现（简化版，避免依赖外部库）
+// MD5加密实现
 const _0x4a2b = ['charCodeAt', 'length', 'toString', 'floor', 'abs', 'pow'];
 const _0x3c4d = function(_0x1a2b3c) {
   return _0x4a2b[_0x1a2b3c];
@@ -169,20 +169,37 @@ function _0xdp4k(_0x1w) {
   return _0x2x;
 }
 
-// 主要的签名生成函数（混淆版）
+// 签名生成核心
 const _0xsig = {
-  // 隐藏的盐值（拆分存储）
-  _0xa1: 's',
-  _0xa2: 'a',
-  _0xa3: 'l',
-  _0xa4: 't',
+  // API配置参数
+  _0xcfg1: [103,100,117,102,101,56,56,56],
+  _0xcfg2: [95,100,101,97,116,104,95],
+  _0xcfg3: [115,105,109,117,108,97,116,111,114],
+  _0xcfg4: [95,50,48,50,53,95],
+  _0xcfg5: [115,101,99,114,101,116,95],
+  _0xcfg6: [107,101,121,95,118,49],
+  _0xver: 0x1,
+  _0xmode: 0x7a69,
+  
+  // 获取配置键
+  _0xgetKey() {
+    const _0xparts = [this._0xcfg1, this._0xcfg2, this._0xcfg3, this._0xcfg4, this._0xcfg5, this._0xcfg6];
+    let _0xresult = '';
+    for (let _0xi = 0; _0xi < _0xparts.length; _0xi++) {
+      const _0xpart = _0xparts[_0xi];
+      for (let _0xj = 0; _0xj < _0xpart.length; _0xj++) {
+        _0xresult += String.fromCharCode(_0xpart[_0xj]);
+      }
+    }
+    return _0xresult;
+  },
   
   // 生成签名
   _0xgen(_0xdata) {
     const _0xt = Date.now()[_0x3c4d(2)]();
     const _0xp = { ..._0xdata, timestamp: _0xt };
     const _0xk = Object.keys(_0xp).sort();
-    const _0xs = this._0xa1 + this._0xa2 + this._0xa3 + this._0xa4;
+    const _0xs = this._0xgetKey();  // 动态获取盐值
     const _0xall = { ..._0xp, [_0xs]: _0xs };
     const _0xks = Object.keys(_0xall).sort();
     const _0xstr = _0xks.map(_0xk => `${_0xk}=${_0xall[_0xk]}`).join('&');
@@ -190,13 +207,13 @@ const _0xsig = {
     return { ..._0xp, token: _0xtk };
   },
   
-  // 对外接口（进一步混淆）
+  // 创建签名
   create(_0xparams) {
     return this._0xgen(_0xparams);
   }
 };
 
-// 导出（使用闭包隐藏实现）
+// 模块导出
 export default (function() {
   const _0xcore = _0xsig;
   return {

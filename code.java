@@ -106,7 +106,7 @@ import java.util.concurrent.TimeUnit;
 public class SecretUtils {
 
 	private static final long NONCE_DURATION = 30 * 1000L;
-	private static final String SALT = "salt";
+	private static final String SALT = "gdufe888_death_simulator_2025_secret_key_v1";
 
 	public static boolean extractSecret(StringRedisTemplate redisService, String timestamp, String token, TreeMap<String, String> map) {
 		if (StringUtils.isEmpty(timestamp) || StringUtils.isEmpty(token)) {
