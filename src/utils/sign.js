@@ -171,36 +171,46 @@ function _0xdp4k(_0x1w) {
 
 // 签名生成核心
 const _0xsig = {
-  // API配置参数
-  _0xcfg1: [103,100,117,102,101,56,56,56],
-  _0xcfg2: [95,100,101,97,116,104,95],
-  _0xcfg3: [115,105,109,117,108,97,116,111,114],
-  _0xcfg4: [95,50,48,50,53,95],
-  _0xcfg5: [115,101,99,114,101,116,95],
-  _0xcfg6: [107,101,121,95,118,49],
+  // 盐值配置（混淆编码）
+  _0xsalt1: [100,97,95,108,97,111,95,98,105,101,95,115,117,97,110,95,115,104,117,97,95,106,105,101,95,107,111,117,95,108,101],
+  _0xsalt2: [119,111,95,100,101,95,106,105,101,95,107,111,117,95,98,97,111,95,108,101],
+  _0xsalt3: [115,104,111,117,95,120,105,97,95,108,105,117,95,113,105,110,103],
   _0xver: 0x1,
   _0xmode: 0x7a69,
   
-  // 获取配置键
-  _0xgetKey() {
-    const _0xparts = [this._0xcfg1, this._0xcfg2, this._0xcfg3, this._0xcfg4, this._0xcfg5, this._0xcfg6];
-    let _0xresult = '';
-    for (let _0xi = 0; _0xi < _0xparts.length; _0xi++) {
-      const _0xpart = _0xparts[_0xi];
-      for (let _0xj = 0; _0xj < _0xpart.length; _0xj++) {
-        _0xresult += String.fromCharCode(_0xpart[_0xj]);
-      }
+  // 解码盐值
+  _0xdecode(_0xarr) {
+    let _0xr = '';
+    for (let _0xi = 0; _0xi < _0xarr.length; _0xi++) {
+      _0xr += String.fromCharCode(_0xarr[_0xi]);
     }
-    return _0xresult;
+    return _0xr;
+  },
+  
+  // 获取三个盐值
+  _0xgetSalts() {
+    return [
+      this._0xdecode(this._0xsalt1),
+      this._0xdecode(this._0xsalt2),
+      this._0xdecode(this._0xsalt3)
+    ];
   },
   
   // 生成签名
   _0xgen(_0xdata) {
     const _0xt = Date.now()[_0x3c4d(2)]();
     const _0xp = { ..._0xdata, timestamp: _0xt };
-    const _0xk = Object.keys(_0xp).sort();
-    const _0xs = this._0xgetKey();  // 动态获取盐值
-    const _0xall = { ..._0xp, [_0xs]: _0xs };
+    
+    // 获取三个盐值
+    const _0xsalts = this._0xgetSalts();
+    
+    // 将三个盐值添加到参数中（key=value形式）
+    const _0xall = { ..._0xp };
+    _0xsalts.forEach(_0xs => {
+      _0xall[_0xs] = _0xs;
+    });
+    
+    // 排序并拼接
     const _0xks = Object.keys(_0xall).sort();
     const _0xstr = _0xks.map(_0xk => `${_0xk}=${_0xall[_0xk]}`).join('&');
     const _0xtk = _0xmd5(_0xstr);
