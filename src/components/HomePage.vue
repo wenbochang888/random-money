@@ -37,9 +37,7 @@
 
     <!-- 底部作者信息 -->
     <div class="author-footer">
-      <a href="https://github.com/wenbochang888/random-money" target="_blank" class="footer-link">GitHub</a>
-      <span class="footer-divider">|</span>
-      <span class="footer-text">微信公众号：程序员博博</span>
+      <span class="footer-text">✨ 微信小程序版本已上线。微信搜索：<strong>程序员博博</strong>，立刻来体验吧 ✨</span>
     </div>
   </div>
 </template>

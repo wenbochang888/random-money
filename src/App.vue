@@ -16,6 +16,9 @@
       v-else-if="currentPage === 'picker'"
       @go-back="goHome"
     />
+    
+    <!-- 欢迎弹窗 -->
+    <WelcomeModal ref="welcomeModal" @close="onModalClose" />
   </div>
 </template>
 
@@ -24,6 +27,7 @@ import HomePage from './components/HomePage.vue';
 import DeathSimulator from './components/DeathSimulator.vue';
 import LotteryGame from './components/LotteryGame.vue';
 import RandomNamePicker from './components/RandomNamePicker.vue';
+import WelcomeModal from './components/WelcomeModal.vue';
 
 export default {
   name: 'App',
@@ -31,12 +35,19 @@ export default {
     HomePage,
     DeathSimulator,
     LotteryGame,
-    RandomNamePicker
+    RandomNamePicker,
+    WelcomeModal
   },
   data() {
     return {
       currentPage: 'home' // 'home', 'death', 'lottery', 'picker'
     };
+  },
+  mounted() {
+    // 页面加载后立即显示欢迎弹窗
+    this.$nextTick(() => {
+      this.$refs.welcomeModal.show();
+    });
   },
   methods: {
     navigateTo(page) {
@@ -47,6 +58,9 @@ export default {
     goHome() {
       this.currentPage = 'home';
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+    onModalClose() {
+      // 弹窗关闭后的回调（如需要可以添加逻辑）
     }
   }
 };
