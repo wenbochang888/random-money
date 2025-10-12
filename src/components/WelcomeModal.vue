@@ -5,23 +5,46 @@
         <button class="close-btn" @click="closeModal">×</button>
         <div class="modal-content">
           <div class="icon-section">
-            <div class="wechat-icon">📱</div>
+            <!-- <div class="wechat-icon">📱</div> -->
             <div class="sparkles">
               <span class="sparkle">✨</span>
               <span class="sparkle">✨</span>
               <span class="sparkle">✨</span>
             </div>
           </div>
-          <h2 class="modal-title">重磅升级</h2>
+          <h2 class="modal-title">🎉 重磅升级</h2>
           <div class="modal-message">
-            <p class="main-text">🎉 微信小程序版本已上线</p>
+            <p class="main-text">微信小程序版本已上线</p>
             <p class="sub-text">微信搜索：<strong class="highlight">程序员博博</strong></p>
-            <p class="cta-text">立刻来体验吧！</p>
           </div>
+          
+          <!-- 二维码区域 -->
+          <div class="qrcode-section">
+            <div class="qrcode-placeholder">
+              <img src="@/assets/miniprogram-qrcode.png" 
+                    alt="小程序码" 
+                    class="qrcode-image" />
+            </div>
+            <p class="qr-tip">💡 提示：请使用微信扫描</p>
+          </div>
+          
+          <!-- 复制按钮 -->
+          <button @click="copyMiniProgramName" class="copy-btn">
+            <span class="copy-icon">📋</span>
+            <span>{{ copyButtonText }}</span>
+          </button>
+          
+          <!-- <div class="guide-steps">
+            <p class="step-title">📝 访问步骤：</p>
+            <p class="step-item">1. 打开微信</p>
+            <p class="step-item">2. 搜索"程序员博博"</p>
+            <p class="step-item">3. 进入小程序体验</p>
+          </div> -->
+          
           <div class="countdown-bar">
             <div class="countdown-fill" :style="{ width: countdownWidth + '%' }"></div>
           </div>
-          <p class="countdown-text">{{ remainingSeconds }}秒后自动关闭</p>
+          <p class="countdown-text">{{ remainingSeconds }}秒后自动关闭提示</p>
         </div>
       </div>
     </div>
@@ -42,7 +65,9 @@ export default {
       visible: false,
       remainingSeconds: 10,
       countdownInterval: null,
-      autoCloseTimer: null
+      autoCloseTimer: null,
+      copyButtonText: '复制小程序名称',
+      miniProgramName: '程序员博博'
     };
   },
   computed: {
@@ -83,6 +108,41 @@ export default {
       if (this.autoCloseTimer) {
         clearTimeout(this.autoCloseTimer);
         this.autoCloseTimer = null;
+      }
+    },
+    async copyMiniProgramName() {
+      try {
+        // 使用现代剪贴板API
+        await navigator.clipboard.writeText(this.miniProgramName);
+        this.copyButtonText = '✅ 已复制！';
+        
+        // 2秒后恢复按钮文字
+        setTimeout(() => {
+          this.copyButtonText = '复制小程序名称';
+        }, 2000);
+      } catch (err) {
+        // 降级方案：使用传统方法
+        const textarea = document.createElement('textarea');
+        textarea.value = this.miniProgramName;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        
+        try {
+          document.execCommand('copy');
+          this.copyButtonText = '✅ 已复制！';
+          setTimeout(() => {
+            this.copyButtonText = '复制小程序名称';
+          }, 2000);
+        } catch (err2) {
+          this.copyButtonText = '❌ 复制失败';
+          setTimeout(() => {
+            this.copyButtonText = '复制小程序名称';
+          }, 2000);
+        }
+        
+        document.body.removeChild(textarea);
       }
     }
   },
@@ -264,6 +324,131 @@ export default {
   opacity: 0.9;
 }
 
+/* 二维码区域 */
+.qrcode-section {
+  margin: 25px 0;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 15px;
+  backdrop-filter: blur(10px);
+}
+
+.qrcode-placeholder {
+  background: white;
+  border-radius: 12px;
+  padding: 30px;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 180px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.qr-icon {
+  font-size: 4rem;
+  margin-bottom: 10px;
+  opacity: 0.6;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+.qr-hint {
+  color: #667eea;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 8px 0 5px 0;
+}
+
+.qr-guide {
+  color: #7f8c8d;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.qr-tip {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.9rem;
+  margin: 0;
+  text-align: center;
+}
+
+/* 复制按钮 */
+.copy-btn {
+  width: 100%;
+  padding: 15px 20px;
+  background: linear-gradient(135deg, #ffd700, #ffed4e);
+  color: #2c3e50;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+  margin-bottom: 20px;
+}
+
+.copy-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+  background: linear-gradient(135deg, #ffed4e, #ffd700);
+}
+
+.copy-btn:active {
+  transform: translateY(0);
+}
+
+.copy-icon {
+  font-size: 1.2rem;
+}
+
+/* 访问步骤 */
+.guide-steps {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 15px 20px;
+  margin-bottom: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.step-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 0 0 10px 0;
+  color: #ffd700;
+}
+
+.step-item {
+  font-size: 0.95rem;
+  margin: 5px 0;
+  padding-left: 10px;
+  opacity: 0.9;
+  line-height: 1.6;
+}
+
+.qrcode-image {
+  width: 100%;
+  max-width: 180px;
+  height: auto;
+  border-radius: 8px;
+}
+
 .countdown-bar {
   width: 100%;
   height: 6px;
@@ -304,7 +489,7 @@ export default {
 /* 响应式设计 */
 @media (max-width: 768px) {
   .modal-container {
-    padding: 30px 25px;
+    padding: 30px 20px;
     margin: 0 15px;
   }
 
@@ -334,6 +519,45 @@ export default {
 
   .sparkle {
     font-size: 1.2rem;
+  }
+  
+  .qrcode-section {
+    margin: 20px 0;
+    padding: 15px;
+  }
+  
+  .qrcode-placeholder {
+    padding: 25px;
+    min-height: 160px;
+  }
+  
+  .qr-icon {
+    font-size: 3.5rem;
+  }
+  
+  .qr-hint {
+    font-size: 1rem;
+  }
+  
+  .qr-guide {
+    font-size: 0.9rem;
+  }
+  
+  .copy-btn {
+    padding: 12px 18px;
+    font-size: 1rem;
+  }
+  
+  .guide-steps {
+    padding: 12px 15px;
+  }
+  
+  .step-title {
+    font-size: 1rem;
+  }
+  
+  .step-item {
+    font-size: 0.9rem;
   }
 }
 </style>
