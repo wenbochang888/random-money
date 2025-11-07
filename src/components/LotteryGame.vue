@@ -201,7 +201,7 @@
       <!-- 排行榜区域 -->
       <div class="ranking-section">
         <h2 class="ranking-title">🏆 排行榜 - {{ lotteryTimesLabel || '单次抽奖' }}</h2>
-        <p class="ranking-subtitle">当前抽奖次数下方案B总收益最高的前10名</p>
+        <p class="ranking-subtitle">当前抽奖次数下方案B总收益最高的前10名 · 排行榜每月会随机更新</p>
         
         <div v-if="rankings.length === 0" class="ranking-empty">
           <p>暂无排行数据，快来创造第一个记录吧！</p>
