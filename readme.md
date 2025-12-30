@@ -141,6 +141,15 @@ tutong/
 
 欢迎关注我的微信公众号，获取更多技术分享和项目更新！
 
+### ☕ 支持项目
+
+如果本项目对您有帮助，欢迎请作者喝杯奶茶，谢谢！
+
+<div align="center">
+  <img src="src/assets/wx.jpg" alt="微信收款码" width="300" style="margin: 10px;">
+  <p><i>微信扫码支持作者</i></p>
+</div>
+
 
 ## 🤝 贡献指南
 

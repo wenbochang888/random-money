@@ -39,16 +39,72 @@
     <div class="author-footer">
       <span class="footer-text">✨ 微信小程序版本已上线。微信搜索：<strong>程序员博博</strong>，立刻来体验吧 ✨</span>
     </div>
+
+    <!-- 悬浮支持按钮 -->
+    <div class="floating-support-btn" @click="openModal">
+      <span class="support-icon">☕</span>
+      <span class="support-text">欢迎请作者喝奶茶</span>
+    </div>
+
+    <!-- 收款码模态框 -->
+    <div v-if="showModal" class="modal-overlay" @click="closeModal">
+      <div class="modal-content" @click.stop>
+        <button class="modal-close" @click="closeModal">✕</button>
+        <div class="modal-body">
+          <h3 class="modal-title">☕ 支持作者</h3>
+          <p class="modal-description">如果本功能对您有帮助，欢迎请作者喝杯奶茶，谢谢！</p>
+          <p class="modal-hint">💡 点击二维码可放大查看</p>
+          <div class="qr-codes-modal">
+            <div class="qr-code-wrapper">
+              <img :src="wxQRCode" alt="微信收款码" class="qr-modal-image clickable" @click="enlargeQRCode">
+              <p class="qr-modal-label">微信支付</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 放大收款码模态框 -->
+    <div v-if="showEnlargeModal" class="enlarge-modal-overlay" @click="closeEnlargeModal">
+      <div class="enlarge-modal-content" @click.stop>
+        <button class="enlarge-modal-close" @click="closeEnlargeModal">✕</button>
+        <img :src="wxQRCode" alt="微信收款码" class="qr-image-enlarged">
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
 export default {
   name: 'HomePage',
+  data() {
+    return {
+      showModal: false,
+      showEnlargeModal: false,
+      wxQRCode: require('../assets/wx.jpg')
+    };
+  },
   methods: {
     navigateTo(page) {
       this.$emit('navigate', page);
+    },
+    openModal() {
+      this.showModal = true;
+      document.body.style.overflow = 'hidden';
+    },
+    closeModal() {
+      this.showModal = false;
+      document.body.style.overflow = '';
+    },
+    enlargeQRCode() {
+      this.showEnlargeModal = true;
+    },
+    closeEnlargeModal() {
+      this.showEnlargeModal = false;
     }
+  },
+  beforeUnmount() {
+    document.body.style.overflow = '';
   }
 };
 </script>
@@ -195,12 +251,230 @@ export default {
   transform: scale(0.98);
 }
 
+/* 悬浮支持按钮样式 */
+.floating-support-btn {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  padding: 18px 30px;
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+  color: white;
+  border-radius: 50px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 8px 24px rgba(255, 107, 107, 0.5);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1000;
+  font-weight: 700;
+  font-size: 1.1rem;
+  animation: breathe 2s ease-in-out infinite, pulse 2s ease-in-out infinite;
+  user-select: none;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.floating-support-btn:hover {
+  transform: translateY(-5px) scale(1.08);
+  box-shadow: 0 15px 40px rgba(255, 107, 107, 0.6);
+  background: linear-gradient(135deg, #ee5a24 0%, #ff6b6b 100%);
+}
+
+.floating-support-btn:active {
+  transform: translateY(-2px) scale(1.05);
+}
+
+.support-icon {
+  font-size: 1.5rem;
+  animation: wiggle 1.5s ease-in-out infinite;
+}
+
+.support-text {
+  letter-spacing: 0.5px;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+@keyframes breathe {
+  0%, 100% {
+    box-shadow: 0 8px 24px rgba(255, 107, 107, 0.5), 0 0 0 0 rgba(255, 107, 107, 0.4);
+  }
+  50% {
+    box-shadow: 0 12px 35px rgba(255, 107, 107, 0.7), 0 0 0 8px rgba(255, 107, 107, 0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.03);
+  }
+}
+
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  15%, 45% {
+    transform: rotate(-12deg);
+  }
+  30%, 60% {
+    transform: rotate(12deg);
+  }
+  75% {
+    transform: rotate(-8deg);
+  }
+  90% {
+    transform: rotate(8deg);
+  }
+}
+
+/* 模态框样式 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  animation: fadeIn 0.3s ease;
+  backdrop-filter: blur(8px);
+  padding: 20px;
+}
+
+.modal-content {
+  position: relative;
+  background: white;
+  border-radius: 24px;
+  padding: 0;
+  max-width: 90%;
+  max-height: 90vh;
+  overflow: auto;
+  animation: zoomIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.3);
+}
+
+.modal-body {
+  padding: 45px 50px;
+  text-align: center;
+}
+
+.modal-title {
+  font-size: 2rem;
+  color: #2c3e50;
+  margin-bottom: 15px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.modal-description {
+  font-size: 1.1rem;
+  color: #7f8c8d;
+  margin-bottom: 12px;
+  line-height: 1.6;
+}
+
+.modal-hint {
+  text-align: center;
+  color: #95a5a6;
+  font-size: 0.9rem;
+  margin-bottom: 30px;
+  font-style: italic;
+}
+
+.qr-codes-modal {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+
+.qr-code-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  padding: 20px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+  border: 2px solid rgba(102, 126, 234, 0.2);
+  transition: all 0.3s ease;
+}
+
+.qr-code-wrapper:hover {
+  transform: translateY(-5px);
+  border-color: rgba(102, 126, 234, 0.4);
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.15);
+}
+
+.qr-modal-image {
+  width: 200px;
+  height: 200px;
+  border-radius: 12px;
+  object-fit: cover;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+  transition: all 0.3s ease;
+}
+
+.qr-modal-image.clickable {
+  cursor: zoom-in;
+}
+
+.qr-modal-image.clickable:hover {
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+  transform: scale(1.05);
+}
+
+.qr-modal-label {
+  font-size: 1.1rem;
+  color: #2c3e50;
+  font-weight: 600;
+  margin: 0;
+}
+
+.modal-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 50%;
+  font-size: 1.5rem;
+  color: #2c3e50;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  font-weight: bold;
+  line-height: 1;
+  z-index: 10;
+}
+
+.modal-close:hover {
+  background: #667eea;
+  color: white;
+  transform: rotate(90deg) scale(1.1);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.3);
+}
+
 /* 底部作者信息样式 */
 .author-footer {
   width: 100%;
   text-align: center;
   padding: 20px;
-  margin-top: 50px;
+  margin-top: 30px;
   font-size: 0.85rem;
   color: rgba(255, 255, 255, 0.5);
 }
@@ -234,6 +508,64 @@ export default {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* 放大收款码模态框样式 */
+.enlarge-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  animation: fadeIn 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.enlarge-modal-content {
+  position: relative;
+  max-width: 95%;
+  max-height: 95vh;
+  animation: zoomIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.qr-image-enlarged {
+  max-width: 100%;
+  max-height: 90vh;
+  width: auto;
+  height: auto;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.enlarge-modal-close {
+  position: absolute;
+  top: -15px;
+  right: -15px;
+  width: 45px;
+  height: 45px;
+  background: white;
+  border: none;
+  border-radius: 50%;
+  font-size: 1.8rem;
+  color: #2c3e50;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+  z-index: 1;
+}
+
+.enlarge-modal-close:hover {
+  background: #ff6b6b;
+  color: white;
+  transform: rotate(90deg) scale(1.1);
 }
 
 @keyframes fadeInUp {
@@ -277,6 +609,17 @@ export default {
   }
 }
 
+@keyframes zoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 /* 响应式设计 */
 @media (max-width: 768px) {
   .main-title {
@@ -306,6 +649,57 @@ export default {
 
   .card-description {
     min-height: auto;
+  }
+
+  .floating-support-btn {
+    bottom: 20px;
+    right: 20px;
+    padding: 14px 24px;
+    font-size: 1rem;
+    gap: 8px;
+  }
+
+  .support-icon {
+    font-size: 1.3rem;
+  }
+
+  .modal-body {
+    padding: 30px 25px;
+  }
+
+  .modal-title {
+    font-size: 1.6rem;
+  }
+
+  .modal-description {
+    font-size: 0.95rem;
+    margin-bottom: 25px;
+  }
+
+  .qr-codes-modal {
+    gap: 20px;
+    flex-direction: column;
+  }
+
+  .qr-code-wrapper {
+    padding: 15px;
+  }
+
+  .qr-modal-image {
+    width: 160px;
+    height: 160px;
+  }
+
+  .qr-modal-label {
+    font-size: 1rem;
+  }
+
+  .modal-close {
+    top: 15px;
+    right: 15px;
+    width: 35px;
+    height: 35px;
+    font-size: 1.2rem;
   }
 }
 </style>
