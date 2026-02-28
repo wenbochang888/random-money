@@ -4,7 +4,7 @@
     
     <div class="zhihu-link-section">
       <a href="https://www.zhihu.com/question/1992732388074231124" target="_blank" class="zhihu-link">
-        知乎问题："花500亿猜神秘人年龄，每次猜1亿，猜对直接获得，猜错扣钱，你敢玩吗？"
+        知乎问题："有一个神秘人，你如果猜对他的年龄就奖励500个亿，但每猜一次需要支付1元，你愿意吗？"
       </a>
     </div>
     
@@ -86,9 +86,9 @@
                 <div class="picker-row-label">年龄</div>
                 <div class="scroll-picker-container">
                   <div class="scroll-picker-column"
-                       @touchstart.passive="handleTouchStart($event,'years')"
+                       @touchstart="handleTouchStart($event,'years')"
                        @touchmove.prevent="handleTouchMove($event,'years')"
-                       @touchend.passive="handleTouchEnd($event,'years')">
+                       @touchend="handleTouchEnd($event,'years')">
                     <div class="scroll-picker-mask"></div>
                     <div class="scroll-picker-indicator"></div>
                     <div class="scroll-picker-content"
@@ -101,9 +101,9 @@
                   </div>
 
                   <div class="scroll-picker-column"
-                       @touchstart.passive="handleTouchStart($event,'months')"
+                       @touchstart="handleTouchStart($event,'months')"
                        @touchmove.prevent="handleTouchMove($event,'months')"
-                       @touchend.passive="handleTouchEnd($event,'months')">
+                       @touchend="handleTouchEnd($event,'months')">
                     <div class="scroll-picker-mask"></div>
                     <div class="scroll-picker-indicator"></div>
                     <div class="scroll-picker-content"
@@ -116,9 +116,9 @@
                   </div>
 
                   <div class="scroll-picker-column"
-                       @touchstart.passive="handleTouchStart($event,'days')"
+                       @touchstart="handleTouchStart($event,'days')"
                        @touchmove.prevent="handleTouchMove($event,'days')"
-                       @touchend.passive="handleTouchEnd($event,'days')">
+                       @touchend="handleTouchEnd($event,'days')">
                     <div class="scroll-picker-mask"></div>
                     <div class="scroll-picker-indicator"></div>
                     <div class="scroll-picker-content"
@@ -135,9 +135,9 @@
                 <div class="picker-row-label">时间</div>
                 <div class="scroll-picker-container">
                   <div class="scroll-picker-column"
-                       @touchstart.passive="handleTouchStart($event,'hours')"
+                       @touchstart="handleTouchStart($event,'hours')"
                        @touchmove.prevent="handleTouchMove($event,'hours')"
-                       @touchend.passive="handleTouchEnd($event,'hours')">
+                       @touchend="handleTouchEnd($event,'hours')">
                     <div class="scroll-picker-mask"></div>
                     <div class="scroll-picker-indicator"></div>
                     <div class="scroll-picker-content"
@@ -150,9 +150,9 @@
                   </div>
 
                   <div class="scroll-picker-column"
-                       @touchstart.passive="handleTouchStart($event,'minutes')"
+                       @touchstart="handleTouchStart($event,'minutes')"
                        @touchmove.prevent="handleTouchMove($event,'minutes')"
-                       @touchend.passive="handleTouchEnd($event,'minutes')">
+                       @touchend="handleTouchEnd($event,'minutes')">
                     <div class="scroll-picker-mask"></div>
                     <div class="scroll-picker-indicator"></div>
                     <div class="scroll-picker-content"
@@ -165,9 +165,9 @@
                   </div>
 
                   <div class="scroll-picker-column"
-                       @touchstart.passive="handleTouchStart($event,'seconds')"
+                       @touchstart="handleTouchStart($event,'seconds')"
                        @touchmove.prevent="handleTouchMove($event,'seconds')"
-                       @touchend.passive="handleTouchEnd($event,'seconds')">
+                       @touchend="handleTouchEnd($event,'seconds')">
                     <div class="scroll-picker-mask"></div>
                     <div class="scroll-picker-indicator"></div>
                     <div class="scroll-picker-content"
@@ -312,8 +312,8 @@ export default {
       isGameOver: false,
       isSuccess: false,
       guessCount: 0,
-      remainingAmount: 500000000000,  // 500亿
-      initialAmount: 500000000000,    // 500亿
+      remainingAmount: 50000000000,   // 500亿
+      initialAmount: 50000000000,     // 500亿
       guessCost: 100000000,           // 1亿
       mysteryBirthTime: null,
       currentReferenceTime: null,
@@ -328,7 +328,7 @@ export default {
       guessResult: null,
       guessMessage: '',
       // 移动端滑动选择器
-      ITEM_H: 44,
+      ITEM_H: 36,
       yearsTransform: 0,
       monthsTransform: 0,
       daysTransform: 0,
@@ -370,6 +370,8 @@ export default {
   mounted() {
     this.initGame();
     this.loadRankings();
+    // [DEBUG] 进入页面弹出答案，调试完毕后删除此行
+    this.$nextTick(() => { alert(`[调试] 答案：${this.mysteryAgeDisplay}`); });
   },
   methods: {
     // 获取指定月份的天数（处理闰年）
@@ -440,22 +442,20 @@ export default {
       
       this.$nextTick(() => {
         this.guessCount++;
+        // 每次猜测无论对错都扣1亿
+        this.remainingAmount -= this.guessCost;
         
         const mysteryAgeMs = this.currentReferenceTime - this.mysteryBirthTime;
         const diff = Math.abs(this.guessedAgeInMs - mysteryAgeMs);
         
-        // 允许1秒的误差（1000毫秒）
-        if (diff <= 1000) {
-          // 猜对了！获奖金额 = 当前剩余金额 + 本次花费（1亿）
-          this.remainingAmount += this.guessCost;
+        // 精确到秒：只接受距离最近的整秒（误差 < 500ms）
+        if (diff < 500) {
           this.isSuccess = true;
           this.isGameOver = true;
           this.guessResult = 'correct';
           this.guessMessage = '恭喜你猜对了！';
           this.saveToRanking();
         } else {
-          // 没猜对，扣除金额
-          this.remainingAmount -= this.guessCost;
           if (this.guessedAgeInMs < mysteryAgeMs) {
             this.guessResult = 'larger';
             this.guessMessage = '年龄太小了！神秘人实际年龄比你猜的更大~';
@@ -561,6 +561,7 @@ export default {
     },
 
     handleTouchStart(event, type) {
+      event.preventDefault();
       const t = event.touches[0];
       this.touch = {
         type,
@@ -571,7 +572,7 @@ export default {
         velocityY: 0
       };
       // 拖动期间去掉 snap 过渡
-      this.$set(this.snapColumns, type, false);
+      this.snapColumns[type] = false;
     },
     handleTouchMove(event, type) {
       if (!this.touch || this.touch.type !== type) return;
@@ -607,11 +608,11 @@ export default {
       this[prop] = finalIdx;
 
       // 启用 snap 过渡，再更新 transform
-      this.$set(this.snapColumns, type, true);
+      this.snapColumns[type] = true;
       this[`${type}Transform`] = this._indexToTransform(finalIdx);
 
       // 动画结束后关闭 snap
-      setTimeout(() => { this.$set(this.snapColumns, type, false); }, 350);
+      setTimeout(() => { this.snapColumns[type] = false; }, 350);
       this.touch = null;
     }
   }
@@ -703,26 +704,26 @@ export default {
   
   .scroll-picker-container{
     display:flex;
-    gap:8px;
+    gap:6px;
     justify-content:space-around;
-    margin-bottom:25px;
-    padding:15px 10px;
+    margin-bottom:16px;
+    padding:10px 8px;
     background:linear-gradient(135deg,#f8f9fa 0%,#ffffff 50%,#f8f9fa 100%);
-    border-radius:18px;
-    box-shadow:0 6px 20px rgba(0,0,0,0.08),inset 0 1px 2px rgba(255,255,255,0.9);
+    border-radius:14px;
+    box-shadow:0 4px 14px rgba(0,0,0,0.07),inset 0 1px 2px rgba(255,255,255,0.9);
     border:1px solid rgba(102,126,234,0.1);
     width:100%;
     box-sizing:border-box;
   }
   
   /* 每列容器
-     height = 5 * ITEM_H = 5*44 = 220px
-     indicator 居中 44px 高度 */
+     height = 5 * ITEM_H = 5*36 = 180px
+     indicator 居中 36px 高度 */
   .scroll-picker-column{
     flex:1;
-    min-width:58px;
+    min-width:48px;
     position:relative;
-    height:220px;
+    height:180px;
     overflow:hidden;
     background:#fff;
     border-radius:14px;
@@ -750,13 +751,13 @@ export default {
     );
   }
   
-  /* 选中指示器：height=44px，top:50% margin-top:-22px */
+  /* 选中指示器：height=36px，top:50% margin-top:-18px */
   .scroll-picker-indicator{
     position:absolute;
     top:50%;
     left:4px;right:4px;
-    height:44px;
-    margin-top:-22px;
+    height:36px;
+    margin-top:-18px;
     border-top:1.5px solid rgba(102,126,234,0.35);
     border-bottom:1.5px solid rgba(102,126,234,0.35);
     background:rgba(102,126,234,0.06);
@@ -766,13 +767,13 @@ export default {
   }
   
   /* 滚动内容
-     padding-top = (5-1)/2 * 44 = 88px  ← 让 item[0] 自然居中
-     padding-bottom 同样 88px 让最后一项也能居中
+     padding-top = (5-1)/2 * 36 = 72px  ← 让 item[0] 自然居中
+     padding-bottom 同样 72px 让最后一项也能居中
      transform=0 → item[0] 居中
-     transform=-v*44 → item[v] 居中  ← 这是唯一正确公式 */
+     transform=-v*36 → item[v] 居中  ← 这是唯一正确公式 */
   .scroll-picker-content{
     position:relative;
-    padding:88px 0;
+    padding:72px 0;
     will-change:transform;
     /* 默认无过渡（拖动时实时跟手） */
     transition:none;
@@ -783,12 +784,12 @@ export default {
     transition:transform 0.3s cubic-bezier(0.25,0.46,0.45,0.94);
   }
   
-  /* 每个选项高 44px */
+  /* 每个选项高 36px */
   .scroll-picker-item{
-    height:44px;
-    line-height:44px;
+    height:36px;
+    line-height:36px;
     text-align:center;
-    font-size:1.15rem;
+    font-size:1rem;
     color:#aab;
     font-weight:500;
     -webkit-tap-highlight-color:transparent;
@@ -799,20 +800,21 @@ export default {
   /* 选中项 */
   .scroll-picker-item.active{
     color:#2c3e50;
-    font-size:1.5rem;
+    font-size:1.25rem;
     font-weight:700;
   }
   
   /* 单位标签 */
   .scroll-picker-label{
     position:absolute;
-    bottom:8px;left:0;right:0;
+    bottom:6px;left:0;right:0;
     text-align:center;
-    font-size:0.75rem;
-    color:#aab;
-    font-weight:600;
+    font-size:0.85rem;
+    color:#667eea;
+    font-weight:700;
     pointer-events:none;
     z-index:3;
+    letter-spacing:1px;
   }
 }
 
