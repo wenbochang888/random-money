@@ -370,8 +370,6 @@ export default {
   mounted() {
     this.initGame();
     this.loadRankings();
-    // [DEBUG] 进入页面弹出答案，调试完毕后删除此行
-    this.$nextTick(() => { alert(`[调试] 答案：${this.mysteryAgeDisplay}`); });
   },
   methods: {
     // 获取指定月份的天数（处理闰年）
