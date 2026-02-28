@@ -916,7 +916,8 @@ async function insertAgeRankingAPI(recordData) {
     probabilityLabel: '神秘人年龄猜测',
     survivalYears: recordData.guessCount,
     survivalDays: recordData.earnedMoney,
-    earnedMoney: recordData.earnedMoneyDisplay
+    earnedMoney: recordData.earnedMoneyDisplay,
+    earnedMoneyValue: String(recordData.earnedMoney || '')
   };
   
   const params = {
@@ -925,7 +926,8 @@ async function insertAgeRankingAPI(recordData) {
     probabilityLabel: String(mappedData.probabilityLabel || ''),
     survivalYears: String(mappedData.survivalYears || ''),
     survivalDays: String(mappedData.survivalDays || ''),
-    earnedMoney: String(mappedData.earnedMoney || '')
+    earnedMoney: String(mappedData.earnedMoney || ''),
+    earnedMoneyValue: String(mappedData.earnedMoneyValue || '')
   };
   
   const signedParams = SignUtil.sign(params);
