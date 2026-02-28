@@ -16,6 +16,10 @@
       v-else-if="currentPage === 'picker'"
       @go-back="goHome"
     />
+    <AgeGuessingGame 
+      v-else-if="currentPage === 'ageguess'"
+      @go-back="goHome"
+    />
   </div>
 </template>
 
@@ -24,6 +28,7 @@ import HomePage from './components/HomePage.vue';
 import DeathSimulator from './components/DeathSimulator.vue';
 import LotteryGame from './components/LotteryGame.vue';
 import RandomNamePicker from './components/RandomNamePicker.vue';
+import AgeGuessingGame from './components/AgeGuessingGame.vue';
 
 export default {
   name: 'App',
@@ -31,11 +36,12 @@ export default {
     HomePage,
     DeathSimulator,
     LotteryGame,
-    RandomNamePicker
+    RandomNamePicker,
+    AgeGuessingGame
   },
   data() {
     return {
-      currentPage: 'home' // 'home', 'death', 'lottery', 'picker'
+      currentPage: 'home' // 'home', 'death', 'lottery', 'picker', 'ageguess'
     };
   },
   methods: {
@@ -72,4 +78,3 @@ body {
   background-color: rgba(255, 255, 255, 0.1);
 }
 </style>
-

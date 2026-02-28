@@ -6,6 +6,20 @@
     </div>
     
     <div class="activity-grid">
+      <!-- 神秘人年龄猜测卡片 -->
+      <div class="activity-card" @click="navigateTo('ageguess')">
+        <div class="card-icon">🔮</div>
+        <h2 class="card-title">神秘人年龄猜测</h2>
+        <p class="card-description">
+          花500亿猜神秘人年龄，每次猜1亿，猜对直接获得，猜错扣钱，你敢玩吗？
+        </p>
+        <div class="card-tags">
+          <span class="tag">概率博弈</span>
+          <span class="tag">智慧挑战</span>
+        </div>
+        <button class="enter-btn">进入体验 →</button>
+      </div>
+
       <!-- 死亡概率模拟器卡片 -->
       <div class="activity-card" @click="navigateTo('death')">
         <div class="card-icon">💀</div>
@@ -32,35 +46,6 @@
           <span class="tag">期望博弈</span>
         </div>
         <button class="enter-btn">进入体验 →</button>
-      </div>
-    </div>
-
-    <!-- 底部作者信息 -->
-    <div class="author-footer">
-      <span class="footer-text">✨ 微信小程序版本已上线。微信搜索：<strong>程序员博博</strong>，立刻来体验吧 ✨</span>
-    </div>
-
-    <!-- 悬浮支持按钮 -->
-    <div class="floating-support-btn" @click="openModal">
-      <span class="support-icon">☕</span>
-      <span class="support-text">欢迎请作者喝奶茶</span>
-    </div>
-
-    <!-- 收款码模态框 -->
-    <div v-if="showModal" class="modal-overlay" @click="closeModal">
-      <div class="modal-content" @click.stop>
-        <button class="modal-close" @click="closeModal">✕</button>
-        <div class="modal-body">
-          <h3 class="modal-title">☕ 支持作者</h3>
-          <p class="modal-description">如果本功能对您有帮助，欢迎请作者喝杯奶茶，谢谢！</p>
-          <p class="modal-hint">💡 点击二维码可放大查看</p>
-          <div class="qr-codes-modal">
-            <div class="qr-code-wrapper">
-              <img :src="wxQRCode" alt="微信收款码" class="qr-modal-image clickable" @click="enlargeQRCode">
-              <p class="qr-modal-label">微信支付</p>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
 

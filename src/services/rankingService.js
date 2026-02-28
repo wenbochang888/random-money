@@ -836,3 +836,198 @@ export function getLotteryTimesMap() {
   return LOTTERY_TIMES_MAP;
 }
 
+
+
+// ==================== 神秘人年龄猜测排行榜功能 ====================
+
+// 存储键名
+const AGE_GUESS_STORAGE_KEY = 'age_guess_rankings';
+
+function getAgeGuessLocalStorage() {
+  try {
+    const data = localStorage.getItem(AGE_GUESS_STORAGE_KEY);
+    if (!data) {
+      return [];
+    }
+    return JSON.parse(data);
+  } catch (error) {
+    console.error('读取年龄猜测排行榜失败:', error);
+    return [];
+  }
+}
+
+function setAgeGuessLocalStorage(data) {
+  try {
+    localStorage.setItem(AGE_GUESS_STORAGE_KEY, JSON.stringify(data));
+    return true;
+  } catch (error) {
+    console.error('保存年龄猜测排行榜失败:', error);
+    return false;
+  }
+}
+
+function generateAgeGuessId() {
+  return Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+}
+
+function insertAgeRankingLocal(recordData) {
+  const allData = getAgeGuessLocalStorage();
+  
+  const record = {
+    id: generateAgeGuessId(),
+    userName: recordData.userName || '匿名用户',
+    guessCount: recordData.guessCount,
+    earnedMoney: recordData.earnedMoney,
+    earnedMoneyDisplay: recordData.earnedMoneyDisplay,
+    mysteryAgeDisplay: recordData.mysteryAgeDisplay,
+    timestamp: new Date().toISOString(),
+    createdAt: Date.now()
+  };
+  
+  allData.push(record);
+  allData.sort((a, b) => b.earnedMoney - a.earnedMoney);
+  const sortedRecords = allData.slice(0, 10);
+  setAgeGuessLocalStorage(sortedRecords);
+  
+  return {
+    success: true,
+    data: record,
+    message: '记录已保存'
+  };
+}
+
+function getAgeRankingsLocal(limit = 10) {
+  const allData = getAgeGuessLocalStorage();
+  
+  return {
+    success: true,
+    data: {
+      records: allData.slice(0, limit),
+      total: allData.length
+    },
+    message: '查询成功'
+  };
+}
+
+async function insertAgeRankingAPI(recordData) {
+  const mappedData = {
+    userName: recordData.userName,
+    probability: 'age-guess',
+    probabilityLabel: '神秘人年龄猜测',
+    survivalYears: recordData.guessCount,
+    survivalDays: recordData.earnedMoney,
+    earnedMoney: recordData.earnedMoneyDisplay
+  };
+  
+  const params = {
+    userName: String(mappedData.userName || ''),
+    probability: String(mappedData.probability || ''),
+    probabilityLabel: String(mappedData.probabilityLabel || ''),
+    survivalYears: String(mappedData.survivalYears || ''),
+    survivalDays: String(mappedData.survivalDays || ''),
+    earnedMoney: String(mappedData.earnedMoney || '')
+  };
+  
+  const signedParams = SignUtil.sign(params);
+  const queryString = new URLSearchParams(signedParams).toString();
+  const url = API_BASE_URL + '/rankings?' + queryString;
+  
+  const requestBody = mappedData;
+  
+  console.log('===== 开始发送年龄猜测插入请求 =====');
+  console.log('请求URL:', url.replace(/token=[^&]+/, 'token=***'));
+  console.log('请求Body:', JSON.stringify(requestBody, null, 2));
+  
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json; charset=UTF-8'
+      },
+      body: JSON.stringify(requestBody)
+    });
+    
+    const result = await response.json();
+    console.log('响应数据:', JSON.stringify(result, null, 2));
+    
+    if (!response.ok) {
+      return {
+        success: false,
+        data: null,
+        message: 'HTTP错误 ' + response.status + ': ' + (result.message || response.statusText)
+      };
+    }
+    
+    return result;
+  } catch (error) {
+    console.error('===== 插入年龄猜测记录异常 =====', error);
+    return {
+      success: false,
+      data: null,
+      message: '网络错误：' + error.message
+    };
+  }
+}
+
+async function getAgeRankingsAPI(limit = 10) {
+  try {
+    const params = {
+      probability: 'age-guess',
+      limit: String(limit)
+    };
+    
+    const signedParams = SignUtil.sign(params);
+    const queryString = new URLSearchParams(signedParams).toString();
+    
+    const response = await fetch(
+      API_BASE_URL + '/rankings?probability=age-guess&' + queryString,
+      {
+        headers: {
+          'Accept': 'application/json; charset=UTF-8'
+        }
+      }
+    );
+    
+    const result = await response.json();
+    
+    if (result.success && result.data && result.data.records) {
+      result.data.records = result.data.records.map(record => ({
+        id: record.id,
+        userName: record.userName,
+        probability: record.probability,
+        probabilityLabel: record.probabilityLabel,
+        guessCount: record.survivalYears,
+        earnedMoney: record.survivalDays,
+        earnedMoneyDisplay: record.earnedMoney,
+        mysteryAgeDisplay: record.probabilityLabel,
+        timestamp: record.timestamp,
+        createdAt: record.createdAt
+      }));
+    }
+    
+    return result;
+  } catch (error) {
+    console.error('查询年龄猜测排行榜失败:', error);
+    return {
+      success: false,
+      data: { records: [], total: 0 },
+      message: '网络错误：' + error.message
+    };
+  }
+}
+
+export async function insertAgeRanking(recordData) {
+  if (USE_BACKEND_API) {
+    return await insertAgeRankingAPI(recordData);
+  } else {
+    return insertAgeRankingLocal(recordData);
+  }
+}
+
+export async function getAgeRankings(limit = 10) {
+  if (USE_BACKEND_API) {
+    return await getAgeRankingsAPI(limit);
+  } else {
+    return getAgeRankingsLocal(limit);
+  }
+}
