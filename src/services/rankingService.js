@@ -982,7 +982,7 @@ async function getAgeRankingsAPI(limit = 10) {
     const queryString = new URLSearchParams(signedParams).toString();
     
     const response = await fetch(
-      API_BASE_URL + '/rankings?probability=age-guess&' + queryString,
+      API_BASE_URL + '/rankings?' + queryString,
       {
         headers: {
           'Accept': 'application/json; charset=UTF-8'

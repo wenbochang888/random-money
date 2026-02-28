@@ -328,7 +328,7 @@ export default {
       guessResult: null,
       guessMessage: '',
       // 移动端滑动选择器
-      ITEM_H: 36,
+      ITEM_H: 30,
       yearsTransform: 0,
       monthsTransform: 0,
       daysTransform: 0,
@@ -370,6 +370,7 @@ export default {
   mounted() {
     this.initGame();
     this.loadRankings();
+    this.$nextTick(() => { console.log('[调试] 答案：', this.mysteryAgeDisplay); });
   },
   methods: {
     // 获取指定月份的天数（处理闰年）
@@ -715,13 +716,13 @@ export default {
   }
   
   /* 每列容器
-     height = 5 * ITEM_H = 5*36 = 180px
-     indicator 居中 36px 高度 */
+     height = 5 * ITEM_H = 5*30 = 150px
+     indicator 居中 30px 高度 */
   .scroll-picker-column{
     flex:1;
-    min-width:48px;
+    min-width:40px;
     position:relative;
-    height:180px;
+    height:150px;
     overflow:hidden;
     background:#fff;
     border-radius:14px;
@@ -749,13 +750,13 @@ export default {
     );
   }
   
-  /* 选中指示器：height=36px，top:50% margin-top:-18px */
+  /* 选中指示器：height=30px，top:50% margin-top:-15px */
   .scroll-picker-indicator{
     position:absolute;
     top:50%;
     left:4px;right:4px;
-    height:36px;
-    margin-top:-18px;
+    height:30px;
+    margin-top:-15px;
     border-top:1.5px solid rgba(102,126,234,0.35);
     border-bottom:1.5px solid rgba(102,126,234,0.35);
     background:rgba(102,126,234,0.06);
@@ -765,13 +766,13 @@ export default {
   }
   
   /* 滚动内容
-     padding-top = (5-1)/2 * 36 = 72px  ← 让 item[0] 自然居中
-     padding-bottom 同样 72px 让最后一项也能居中
+     padding-top = (5-1)/2 * 30 = 60px  ← 让 item[0] 自然居中
+     padding-bottom 同样 60px 让最后一项也能居中
      transform=0 → item[0] 居中
-     transform=-v*36 → item[v] 居中  ← 这是唯一正确公式 */
+     transform=-v*30 → item[v] 居中  ← 这是唯一正确公式 */
   .scroll-picker-content{
     position:relative;
-    padding:72px 0;
+    padding:60px 0;
     will-change:transform;
     /* 默认无过渡（拖动时实时跟手） */
     transition:none;
@@ -782,12 +783,12 @@ export default {
     transition:transform 0.3s cubic-bezier(0.25,0.46,0.45,0.94);
   }
   
-  /* 每个选项高 36px */
+  /* 每个选项高 30px */
   .scroll-picker-item{
-    height:36px;
-    line-height:36px;
+    height:30px;
+    line-height:30px;
     text-align:center;
-    font-size:1rem;
+    font-size:0.85rem;
     color:#aab;
     font-weight:500;
     -webkit-tap-highlight-color:transparent;
@@ -798,7 +799,7 @@ export default {
   /* 选中项 */
   .scroll-picker-item.active{
     color:#2c3e50;
-    font-size:1.25rem;
+    font-size:1.05rem;
     font-weight:700;
   }
   
@@ -894,7 +895,8 @@ export default {
 .reward-value{font-size:2rem}
 .ranking-section{padding:20px 15px}
 .ranking-title{font-size:1.5rem}
-.floating-support-btn{bottom:20px;right:20px;padding:14px 24px;font-size:1rem;gap:8px}
+.floating-support-btn{bottom:15px;right:15px;padding:7px 12px;font-size:0.72rem;gap:4px}
+.support-icon{font-size:1rem}
 .author-footer{width:100%;text-align:center;padding:20px;margin-top:50px;font-size:0.85rem}
 .guess-btn{font-size:1.1rem;padding:16px 20px;margin-top:20px}
 }
