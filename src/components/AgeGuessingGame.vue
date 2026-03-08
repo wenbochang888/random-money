@@ -625,11 +625,61 @@ export default {
     _triggerHaptic() {
       // 仅移动端触发
       if (!('ontouchstart' in window)) return;
-      // Android: Vibration API —— 短促 8ms 轻触感
+
+      // 层 1: iOS 18+ Taptic Engine（checkbox switch hack）
+      // Safari 17.4 引入 <input switch>，iOS 18 起触发真实震动；首次调用后缓存检测结果
+      if (this._iosSwitchHaptic === undefined) {
+        const t = document.createElement('input');
+        t.type = 'checkbox';
+        t.setAttribute('switch', '');
+        this._iosSwitchHaptic = 'switch' in t;
+      }
+      if (this._iosSwitchHaptic) {
+        // 复用预创建的 DOM 元素，避免每次 haptic 都插拔 DOM（picker 滚动可达 10+次/秒）
+        if (!this._hapticInput) {
+          const label = document.createElement('label');
+          label.style.cssText = 'position:fixed;top:-9999px;pointer-events:none;opacity:0';
+          const input = document.createElement('input');
+          input.type = 'checkbox';
+          input.setAttribute('switch', '');
+          label.appendChild(input);
+          document.body.appendChild(label);
+          this._hapticInput = input;
+        }
+        this._hapticInput.click();
+        return;
+      }
+
+      // 层 2: Android Vibration API —— 短促 8ms 轻触感
       if (navigator.vibrate) {
         navigator.vibrate(8);
+        return;
       }
-      // iOS 不支持 vibrate，CSS scale 弹跳动画已提供视觉咔哒感
+
+      // 层 3: iOS <18 —— Web Audio API 模拟咔哒声
+      // 触摸事件本身满足 AudioContext 用户手势要求；静音模式下自动无声（CSS scale 动画已兜底）
+      try {
+        if (!this._hapticAudioCtx) {
+          this._hapticAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        const ctx = this._hapticAudioCtx;
+        if (ctx.state === 'suspended') ctx.resume(); // iOS 后台切回时可能挂起
+
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(1200, ctx.currentTime); // 高频 → 清脆咔哒感
+        gain.gain.setValueAtTime(0.05, ctx.currentTime);     // 极轻音量（0.05/1.0）
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.015); // 15ms 衰减
+
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.015);
+      } catch (e) {
+        // 静默降级：任何异常均不影响功能，CSS scale 动画已兜底
+      }
     }
 
   }
