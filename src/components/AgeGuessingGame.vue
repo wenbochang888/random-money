@@ -899,8 +899,11 @@ export default {
 #NV|.ranking-table th,.ranking-table td{text-align:center}
 #WK|.name-col{min-width:80px}
 .ranking-title{font-size:1.5rem}
-.floating-support-btn{bottom:15px;right:15px;padding:7px 12px;font-size:0.72rem;gap:4px}
-.support-icon{font-size:1rem}
+.floating-support-btn{bottom:20px;right:20px;padding:8px 12px;font-size:0.75rem;gap:5px;min-width:auto}
+.floating-support-btn .support-text{position:absolute;clip:rect(0,0,0,0);clip-path:inset(50%)}
+.floating-support-btn .support-icon{font-size:1rem}
+.floating-support-btn::after{content:"奶茶";margin-left:-2px}
+
 .author-footer{width:100%;text-align:center;padding:20px;margin-top:50px;font-size:0.85rem}
 .guess-btn{font-size:1.1rem;padding:16px 20px;margin-top:20px}
 }
