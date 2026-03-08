@@ -1034,6 +1034,7 @@ export default {
 
 .ranking-table-wrapper {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   border-radius: 10px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
@@ -1052,7 +1053,7 @@ export default {
 
 .ranking-table th {
   padding: 15px 12px;
-  text-align: left;
+  text-align: center;
   font-weight: 600;
   font-size: 0.9rem;
   letter-spacing: 0.5px;
@@ -1079,6 +1080,7 @@ export default {
 .ranking-table td {
   padding: 12px;
   color: #2c3e50;
+  text-align: center;
 }
 
 .rank-col {
@@ -1219,11 +1221,14 @@ export default {
   
   .ranking-table {
     font-size: 0.85rem;
+    white-space: nowrap;
+    min-width: 600px;
   }
   
   .ranking-table th,
   .ranking-table td {
     padding: 10px 8px;
+    text-align: center;
   }
   
   .rank-col {
@@ -1237,7 +1242,7 @@ export default {
   }
   
   .name-col {
-    width: 100px;
+    min-width: 80px;
   }
   
   .survival-col {
