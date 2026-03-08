@@ -336,7 +336,8 @@ export default {
       minutesTransform: 0,
       secondsTransform: 0,
       snapColumns: {},   // 哪些列正在做 snap 动画
-      touch: null        // 当前触摸状态
+      touch: null,       // 当前触摸状态
+      lastActiveIndices: {} // 每列上一次激活的index（用于检测格子切换）
     };
   },
   computed: {
@@ -427,6 +428,7 @@ export default {
       this.secondsTransform = 0;
       this.snapColumns = {};
       this.touch = null;
+      this.lastActiveIndices = {};
     },
     resetGame() { 
       this.initGame(); 
@@ -593,6 +595,12 @@ export default {
       const maxT = 0;
       if (newT > maxT) newT = maxT + (newT - maxT) * 0.25;
       if (newT < minT) newT = minT + (newT - minT) * 0.25;
+      // 实时检测选中项是否切换 → 触发触觉/视觉反馈
+      const currentIdx = this._transformToIndex(newT, 0, type);
+      if (this.lastActiveIndices[type] !== currentIdx) {
+        this.lastActiveIndices[type] = currentIdx;
+        this._triggerHaptic();
+      }
 
       this[`${type}Transform`] = newT;
     },
@@ -613,7 +621,17 @@ export default {
       // 动画结束后关闭 snap
       setTimeout(() => { this.snapColumns[type] = false; }, 350);
       this.touch = null;
+    },
+    _triggerHaptic() {
+      // 仅移动端触发
+      if (!('ontouchstart' in window)) return;
+      // Android: Vibration API —— 短促 8ms 轻触感
+      if (navigator.vibrate) {
+        navigator.vibrate(8);
+      }
+      // iOS 不支持 vibrate，CSS scale 弹跳动画已提供视觉咔哒感
     }
+
   }
 };
 </script>
@@ -793,14 +811,17 @@ export default {
     font-weight:500;
     -webkit-tap-highlight-color:transparent;
     -webkit-user-select:none;
-    user-select:none;
+user-select:none;
+    transition:transform 0.12s cubic-bezier(0.34,1.56,0.64,1),color 0.12s,font-size 0.12s;
+    will-change:transform;
   }
   
   /* 选中项 */
   .scroll-picker-item.active{
     color:#2c3e50;
     font-size:1.05rem;
-    font-weight:700;
+font-weight:700;
+    transform:scale(1.1);
   }
   
   /* 单位标签 */
